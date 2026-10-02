@@ -1,6 +1,7 @@
 {
     "type": "Resource",
     "resourceType": "Sheep",
+    "health": 4,
     "sizeX": 64,
     "sizeY": 32,
     "animations": {

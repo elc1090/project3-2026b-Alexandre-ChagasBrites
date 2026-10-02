@@ -92,6 +92,7 @@ async function loadPrefab(x, y, path) {
     const object = {
         prefab: prefab,
         alive: true,
+        health: prefab.health,
         x: x,
         y: y,
         offsetX: 0,
@@ -100,7 +101,7 @@ async function loadPrefab(x, y, path) {
         targetObject: null,
         targetX: x,
         targetY: y,
-        actionTimer: Math.random() * 2.0 + 2.0,
+        actionTimer: 0,
         frame: 0,
         frameTimer: 0,
         animation: "",
@@ -108,6 +109,9 @@ async function loadPrefab(x, y, path) {
         textureRegion: { x: 0, y: 0, w: 0, h: 0 },
     };
     objectSetAnimation(object, "Idle");
+    if (object.prefab.resourceType === "Sheep") {
+        object.actionTimer = Math.random() * 2.0 + 2.0;
+    }
     game.objects.push(object);
 }
 
@@ -127,7 +131,7 @@ function getObject(x, y, filter) {
 }
 
 function canInteract(object, targetObject) {
-    if (object.prefab.unitType === "Pawn" && targetObject.prefab.type === "Resource" && targetObject.animation !== "Stump") {
+    if (object.prefab.unitType === "Pawn" && targetObject.prefab.type === "Resource" && targetObject.health > 0) {
         return true;
     } else {
         return false;
@@ -135,24 +139,41 @@ function canInteract(object, targetObject) {
 }
 
 function onStep(deltatime) {
+
+    // Pre Move
     for (let i = 0; i < game.objects.length; i++) {
         const object = game.objects[i];
-
         if (object.prefab.type === "Unit" && object.prefab.unitType === "Pawn") {
+            if (object.targetObject !== null) {
+                const offsetX = object.targetObject.x - object.x;
+                object.targetX = object.targetObject.x - Math.sign(offsetX);
+                if (Math.sign(offsetX) === 0.0) {
+                    object.targetX += object.flip ? -1 : 1;
+                }
+                object.targetY = object.targetObject.y;
+                if (object.animation == "Idle" && (object.x !== object.targetX || object.y !== object.targetY)) {
+                    objectSetAnimation(object, "Run");
+                }
+            }
             if (object.targetObject !== null && object.animation === "Interact") {
                 if (object.actionTimer > 0.0) {
                     object.actionTimer -= Math.min(object.actionTimer, deltatime);
-                } else {
-                    if (object.targetObject.prefab.resourceType === "Sheep") {
-                        game.resources.meat.count += 5;
-                        object.targetObject.alive = false;
-                        loadPrefab(object.targetObject.x, object.targetObject.y, "assets/Prefabs/Particles/Dust1.json");
-                    } else if (object.targetObject.prefab.resourceType === "Tree") {
-                        game.resources.wood.count += 5;
-                        objectSetAnimation(object.targetObject, "Stump");
-                        loadPrefab(object.targetObject.x, object.targetObject.y, "assets/Prefabs/Particles/Dust1.json");
+                } else if (object.x === object.targetX && object.y === object.targetY) {
+                    object.targetObject.health--;
+                    if (object.targetObject.health > 0) {
+                        object.actionTimer = object.prefab.animations[object.animation].frameCount * 0.1;
+                    } else {
+                        if (object.targetObject.prefab.resourceType === "Sheep") {
+                            game.resources.meat.count += 5;
+                            object.targetObject.alive = false;
+                            loadPrefab(object.targetObject.x, object.targetObject.y, "assets/Prefabs/Particles/Dust1.json");
+                        } else if (object.targetObject.prefab.resourceType === "Tree") {
+                            game.resources.wood.count += 5;
+                            objectSetAnimation(object.targetObject, "Stump");
+                            loadPrefab(object.targetObject.x, object.targetObject.y, "assets/Prefabs/Particles/Dust1.json");
+                        }
+                        object.targetObject = null;
                     }
-                    object.targetObject = null;
                 }
             }
         } else if (object.prefab.type === "Resource" && object.prefab.resourceType === "Sheep") {
@@ -170,11 +191,18 @@ function onStep(deltatime) {
                     }
                     object.actionTimer = object.animation === "Grass"
                         ? object.prefab.animations[object.animation].frameCount * 0.1
-                        : Math.random() * 2.0 + 2.0;
+                        : Math.random() * 1.0 + 1.0;
                 }
             }
         }
+    }   
 
+    // Move
+    for (let i = 0; i < game.objects.length; i++) {
+        const object = game.objects[i];
+        if (object.animation !== "Run" && object.animation !== "Move") {
+            continue;
+        }
         let offsetX = object.targetX - object.x;
         let offsetY = object.targetY - object.y;
         if (offsetX * offsetX + offsetY * offsetY > 0.0) {
@@ -188,23 +216,29 @@ function onStep(deltatime) {
             offsetX = object.targetX - object.x;
             offsetY = object.targetY - object.y;
         }
+    }   
 
-        if ((object.animation === "Run" || object.animation === "Move") && offsetX * offsetX + offsetY * offsetY === 0.0) {
-            if (object.targetObject === null) {
-                objectSetAnimation(object, "Idle");
-            } else {
-                object.flip = object.targetObject.x - object.x < 0.0;
-                objectSetAnimation(object, "Interact");
-                object.actionTimer = object.prefab.animations[object.animation].frameCount * 0.1 * 4 - 0.3;
-            }
+    // Post Move
+    for (let i = 0; i < game.objects.length; i++) {
+        const object = game.objects[i];
+        if (object.targetObject !== null && object.x === object.targetX && object.y === object.targetY && object.animation !== "Interact") {
+            object.flip = object.targetObject.x - object.x < 0.0;
+            objectSetAnimation(object, "Interact");
+            object.actionTimer = object.prefab.animations[object.animation].frameCount * 0.1 - 0.3;
+        } else if ((object.animation === "Run" || object.animation === "Move") && object.x === object.targetX && object.y === object.targetY) {
+            objectSetAnimation(object, "Idle");
         }
+    }   
 
+    // Animate
+    for (let i = 0; i < game.objects.length; i++) {
+        const object = game.objects[i];
         if (object.frameTimer !== undefined) {
             object.frameTimer += deltatime / 0.1;
             if (object.frameTimer >= 1.0) {
                 const animation = object.prefab.animations[object.animation];
                 const frames = Math.floor(object.frameTimer);
-                if (object.frame + frames >= animation.frameCount && object.animation === "Interact" && object.targetObject === null) {
+                if (object.frame + frames >= animation.frameCount && object.animation === "Interact" && (object.targetObject === null || (object.x !== object.targetX && object.y !== object.targetY))) {
                     objectSetAnimation(object, "Idle");
                 } else if (object.frame + frames >= animation.frameCount && object.prefab.type === "Particle") {
                     object.alive = false;
@@ -216,6 +250,7 @@ function onStep(deltatime) {
             }
         }
     }   
+
     game.objects = game.objects.filter((object) => { return object.alive; });
 }
 
@@ -262,14 +297,6 @@ function onEvent(e) {
                     game.activeObject.targetX = game.cursor.x;
                     game.activeObject.targetY = game.cursor.y;
                     objectSetAnimation(game.activeObject, "Run");
-                } else {
-                    const offsetX = game.activeObject.targetObject.x - game.activeObject.x;
-                    game.activeObject.targetX = game.activeObject.targetObject.x - Math.sign(offsetX);
-                    if (Math.sign(offsetX) === 0.0) {
-                        game.activeObject.targetX += game.activeObject.flip ? -1 : 1;
-                    }
-                    game.activeObject.targetY = game.activeObject.targetObject.y;
-                    objectSetAnimation(game.activeObject, "Run");
                 }
             }
         }
@@ -286,6 +313,17 @@ function onRender() {
     ctx.resetTransform();
     ctx.translate(canvas.width * 0.5, canvas.height * 0.5);
     ctx.scale(64, 64);
+
+    ctx.beginPath();
+    ctx.strokeStyle = "#ffffff7f";
+    ctx.lineWidth = 1.0 / 64.0;
+    for (let i = -5.5; i <= 5.5; i++) {
+        ctx.moveTo(i, -5.5);
+        ctx.lineTo(i, 5.5);
+        ctx.moveTo(-5.5, i);
+        ctx.lineTo(5.5, i);
+    }
+    ctx.stroke();
     
     game.objects.sort((a, b) => { return a.y - b.y; });
     for (let i = 0; i < game.objects.length; i++) {
@@ -298,7 +336,7 @@ function onRender() {
         ctx.save();
         ctx.translate(object.x, object.y);
 
-        ctx.strokeStyle = "white";
+        /*ctx.strokeStyle = "white";
         ctx.lineWidth = 1.0 / 64.0;
         ctx.strokeRect(-object.prefab.sizeX / 64 * 0.5, -object.prefab.sizeY / 64 * 0.5, object.prefab.sizeX / 64, object.prefab.sizeY / 64);
 
@@ -314,7 +352,7 @@ function onRender() {
         ctx.beginPath();
         ctx.moveTo(0, 0);
         ctx.lineTo(0, -1);
-        ctx.stroke();
+        ctx.stroke();*/
 
         ctx.scale(object.flip ? -1.0 : 1.0, 1.0);
         ctx.translate(-object.offsetX / 64, -object.offsetY / 64);
@@ -392,7 +430,7 @@ function getRandomPosition() {
 
 async function loadLevel() {
     await loadResources();
-    await loadPrefab(0.0, -4.0, "assets/Prefabs/Buildings/Castle.json");
+    await loadPrefab(0.0, -4.5, "assets/Prefabs/Buildings/Castle.json");
     for (let i = 0; i < 5; i++) {
         const position = getRandomPosition();
         await loadPrefab(position.x, position.y, "assets/Prefabs/Units/Pawn.json");
