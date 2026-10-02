@@ -24,8 +24,13 @@ const game = {
     },
     objects: [],
 
-    cursor: null,
-    selectedObject: null
+    cursor: {
+        x: 0,
+        y: 0,
+        texture: null
+    },
+    hotObject: null,
+    activeObject: null
 };
 
 async function loadAsset(type, path) {
@@ -79,21 +84,7 @@ async function loadResources() {
     game.resources.gold.texture = await loadAsset("Image", "assets/Images/UI Elements/Icons/Icon_03.png");
     game.resources.meat.texture = await loadAsset("Image", "assets/Images/UI Elements/Icons/Icon_04.png");
     game.resources.wood.texture = await loadAsset("Image", "assets/Images/UI Elements/Icons/Icon_02.png");
-}
-
-async function loadCursor() {
-    const object = {
-        prefab: {},
-        alive: true,
-        x: 0,
-        y: 0,
-        offsetX: 64,
-        offsetY: 64,
-        texture: await loadAsset("Image", "assets/Images/UI Elements/Cursors/Cursor_04.png"),
-        textureRegion: { x: 0, y: 0, w: 128, h: 128 },
-    };
-    game.objects.push(object);
-    game.cursor = object;
+    game.cursor.texture = await loadAsset("Image", "assets/Images/UI Elements/Cursors/Cursor_04.png");
 }
 
 async function loadPrefab(x, y, path) {
@@ -118,20 +109,17 @@ async function loadPrefab(x, y, path) {
     };
     objectSetAnimation(object, "Idle");
     game.objects.push(object);
-    if (game.selectedObject === null && object.prefab.type === "Unit") {
-        game.selectedObject = object;
-    }
 }
 
-function getObject(x, y) {
+function getObject(x, y, filter) {
     for (let i = 0; i < game.objects.length; i++) {
         const object = game.objects[i];
         if (object === game.cursor) {
             continue;
         }
-        let offsetX = x - object.x;
-        let offsetY = y - object.y;
-        if (offsetX * offsetX + offsetY * offsetY < 0.25) {
+        let offsetX = x - (object.x - object.prefab.sizeX / 64 * 0.5);
+        let offsetY = y - (object.y - object.prefab.sizeY / 64 * 0.5);
+        if (offsetX >= 0.0 && offsetX < object.prefab.sizeX / 64 && offsetY >= 0.0 && offsetY < object.prefab.sizeY / 64 && filter(object)) {
             return object;
         }
     }
@@ -156,11 +144,11 @@ function onStep(deltatime) {
                     object.actionTimer -= Math.min(object.actionTimer, deltatime);
                 } else {
                     if (object.targetObject.prefab.resourceType === "Sheep") {
-                        game.resources.meat.count++;
+                        game.resources.meat.count += 5;
                         object.targetObject.alive = false;
                         loadPrefab(object.targetObject.x, object.targetObject.y, "assets/Prefabs/Particles/Dust1.json");
                     } else if (object.targetObject.prefab.resourceType === "Tree") {
-                        game.resources.wood.count++;
+                        game.resources.wood.count += 5;
                         objectSetAnimation(object.targetObject, "Stump");
                         loadPrefab(object.targetObject.x, object.targetObject.y, "assets/Prefabs/Particles/Dust1.json");
                     }
@@ -236,23 +224,44 @@ function onEvent(e) {
         game.cursor.x = (e.clientX - canvas.width * 0.5) / 64;
         game.cursor.y = (e.clientY - canvas.height * 0.5) / 64;
 
-        if (game.selectedObject !== null && e.type === "mousedown") {
-            game.selectedObject.targetObject = getObject(game.cursor.x, game.cursor.y);
-            if (game.selectedObject.targetObject !== null && !canInteract(game.selectedObject, game.selectedObject.targetObject)) {
-                game.selectedObject.targetObject = null;
+        if (game.activeObject === null) {
+            game.hotObject = getObject(game.cursor.x, game.cursor.y, (object) => {
+                return object.prefab.type === "Unit";
+            });
+            if (e.type === "mousedown" && e.button === 0) {
+                e.preventDefault();
+                e.stopImmediatePropagation();
+                game.activeObject = game.hotObject;
             }
-            if (game.selectedObject.targetObject === null) {
-                game.selectedObject.targetX = game.cursor.x;
-                game.selectedObject.targetY = game.cursor.y;
-                objectSetAnimation(game.selectedObject, "Run");
-            } else {
-                const offsetX = game.selectedObject.targetObject.x - game.selectedObject.x;
-                game.selectedObject.targetX = game.selectedObject.targetObject.x - Math.sign(offsetX);
-                if (Math.sign(offsetX) === 0.0) {
-                    game.selectedObject.targetX += game.selectedObject.flip ? -1 : 1;
+        } else if (game.activeObject.prefab.type === "Unit") {
+            game.hotObject = getObject(game.cursor.x, game.cursor.y, (object) => {
+                return object.prefab.type === "Unit" || canInteract(game.activeObject, object);
+            });
+            if (e.type === "mousedown" && e.button === 0) {
+                e.preventDefault();
+                e.stopImmediatePropagation();
+                game.activeObject = getObject(game.cursor.x, game.cursor.y, (object) => {
+                    return object.prefab.type === "Unit";
+                });
+            } else if (e.type === "mousedown" && e.button === 2) {
+                e.preventDefault();
+                e.stopImmediatePropagation();
+                game.activeObject.targetObject = getObject(game.cursor.x, game.cursor.y, (object) => {
+                    return canInteract(game.activeObject, object);
+                });
+                if (game.activeObject.targetObject === null) {
+                    game.activeObject.targetX = game.cursor.x;
+                    game.activeObject.targetY = game.cursor.y;
+                    objectSetAnimation(game.activeObject, "Run");
+                } else {
+                    const offsetX = game.activeObject.targetObject.x - game.activeObject.x;
+                    game.activeObject.targetX = game.activeObject.targetObject.x - Math.sign(offsetX);
+                    if (Math.sign(offsetX) === 0.0) {
+                        game.activeObject.targetX += game.activeObject.flip ? -1 : 1;
+                    }
+                    game.activeObject.targetY = game.activeObject.targetObject.y;
+                    objectSetAnimation(game.activeObject, "Run");
                 }
-                game.selectedObject.targetY = game.selectedObject.targetObject.y;
-                objectSetAnimation(game.selectedObject, "Run");
             }
         }
     }
@@ -271,8 +280,17 @@ function onRender() {
     game.objects.sort((a, b) => { return a.y - b.y; });
     for (let i = 0; i < game.objects.length; i++) {
         const object = game.objects[i];
+
+        if (game.hotObject == object || game.activeObject == object) {
+            drawCursor(object);
+        }
+
         ctx.save();
         ctx.translate(object.x, object.y);
+
+        ctx.strokeStyle = "white";
+        ctx.lineWidth = 1.0 / 64.0;
+        ctx.strokeRect(-object.prefab.sizeX / 64 * 0.5, -object.prefab.sizeY / 64 * 0.5, object.prefab.sizeX / 64, object.prefab.sizeY / 64);
 
         ctx.strokeStyle = "red";
         ctx.lineWidth = 1.0 / 64.0;
@@ -298,13 +316,23 @@ function onRender() {
     {
         ctx.fillStyle = "white";
         ctx.font = "64px Patrick Hand";
-        ctx.fillText(`${game.resources.gold.count}`, 112, 80);
-        ctx.fillText(`${game.resources.meat.count}`, 112, 144);
-        ctx.fillText(`${game.resources.wood.count}`, 112, 208);
+        ctx.fillText(`${game.resources.gold.count}`.padStart(3, "0"), 112, 80);
+        ctx.fillText(`${game.resources.meat.count}`.padStart(3, "0"), 112, 144);
+        ctx.fillText(`${game.resources.wood.count}`.padStart(3, "0"), 112, 208);
         ctx.drawImage(game.resources.gold.texture, 32, 32);
         ctx.drawImage(game.resources.meat.texture, 32, 96);
         ctx.drawImage(game.resources.wood.texture, 32, 160);
     }
+}
+
+function drawCursor(object) {
+    ctx.save();
+    ctx.translate(object.x, object.y);
+    ctx.drawImage(game.cursor.texture,   3,   3, 21, 25, -object.prefab.sizeX / 64 * 0.5 -  9 / 64, -object.prefab.sizeY / 64 * 0.5 - 14 / 64, 21 / 64, 25 / 64);
+    ctx.drawImage(game.cursor.texture, 104,   3, 21, 25,  object.prefab.sizeX / 64 * 0.5 - 12 / 64, -object.prefab.sizeY / 64 * 0.5 - 14 / 64, 21 / 64, 25 / 64);
+    ctx.drawImage(game.cursor.texture,   3, 100, 21, 25, -object.prefab.sizeX / 64 * 0.5 -  9 / 64,  object.prefab.sizeY / 64 * 0.5 - 11 / 64, 21 / 64, 25 / 64);
+    ctx.drawImage(game.cursor.texture, 104, 100, 21, 25,  object.prefab.sizeX / 64 * 0.5 - 12 / 64,  object.prefab.sizeY / 64 * 0.5 - 11 / 64, 21 / 64, 25 / 64);
+    ctx.restore();
 }
 
 function resizeCanvas() {
@@ -342,11 +370,32 @@ window.addEventListener("load", () => {
     requestAnimationFrame(gameloop);
 });
 
-loadResources();
-loadCursor();
-loadPrefab(0.0, 0.0, "assets/Prefabs/Units/Pawn.json");
-for (let i = 0; i < 10; i++) {
-    const treePath = `assets/Prefabs/Terrain/Resources/Wood/Trees/Tree${Math.floor(Math.random() * 4 + 1)}.json`;
-    loadPrefab(Math.floor(Math.random() * 11) - 5, Math.floor(Math.random() * 11) - 5, treePath);
-    loadPrefab(Math.floor(Math.random() * 11) - 5, Math.floor(Math.random() * 11) - 5, "assets/Prefabs/Terrain/Resources/Meat/Sheep.json");
+function getRandomPosition() {
+    let x = Math.floor(Math.random() * 11) - 5;
+    let y = Math.floor(Math.random() * 11) - 5;
+    while (getObject(x, y, (object) => true) !== null) {
+        x = Math.floor(Math.random() * 11) - 5;
+        y = Math.floor(Math.random() * 11) - 5;
+    }
+    return { x: x, y: y };
 }
+
+async function loadLevel() {
+    await loadResources();
+    await loadPrefab(0.0, -4.0, "assets/Prefabs/Buildings/Castle.json");
+    for (let i = 0; i < 5; i++) {
+        const position = getRandomPosition();
+        await loadPrefab(position.x, position.y, "assets/Prefabs/Units/Pawn.json");
+    }
+    for (let i = 0; i < 10; i++) {
+        const position = getRandomPosition();
+        const treePath = `assets/Prefabs/Terrain/Resources/Wood/Trees/Tree${Math.floor(Math.random() * 4 + 1)}.json`;
+        await loadPrefab(position.x, position.y, treePath);
+    }
+    for (let i = 0; i < 10; i++) {
+        const position = getRandomPosition();
+        await loadPrefab(position.x, position.y, "assets/Prefabs/Terrain/Resources/Meat/Sheep.json");
+    }
+}
+
+loadLevel();

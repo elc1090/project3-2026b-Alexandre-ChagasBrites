@@ -1,6 +1,8 @@
 {
     "type": "Unit",
     "unitType": "Warrior",
+    "sizeX": 64,
+    "sizeY": 32,
     "animations": {
         "Idle": {
             "offsetX": 96,

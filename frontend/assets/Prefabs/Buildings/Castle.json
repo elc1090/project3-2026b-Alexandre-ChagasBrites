@@ -1,0 +1,14 @@
+{
+    "type": "Building",
+    "buildingType": "Castle",
+    "sizeX": 320,
+    "sizeY": 128,
+    "animations": {
+        "Idle": {
+            "offsetX": 160,
+            "offsetY": 192,
+            "texture": "assets/Images/Buildings/Blue Buildings/Castle.png",
+            "frameCount": 1
+        }
+    }
+}

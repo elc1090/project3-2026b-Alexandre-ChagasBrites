@@ -1,22 +1,24 @@
 {
     "type": "Unit",
     "unitType": "Pawn",
+    "sizeX": 64,
+    "sizeY": 32,
     "animations": {
         "Idle": {
             "offsetX": 96,
-            "offsetY": 126,
+            "offsetY": 127,
             "texture": "assets/Images/Units/Blue Units/Pawn/Pawn_Idle Axe.png",
             "frameCount": 8
         },
         "Run": {
             "offsetX": 96,
-            "offsetY": 126,
+            "offsetY": 127,
             "texture": "assets/Images/Units/Blue Units/Pawn/Pawn_Run Axe.png",
             "frameCount": 6
         },
         "Interact": {
             "offsetX": 96,
-            "offsetY": 126,
+            "offsetY": 127,
             "texture": "assets/Images/Units/Blue Units/Pawn/Pawn_Interact Axe.png",
             "frameCount": 6
         }
