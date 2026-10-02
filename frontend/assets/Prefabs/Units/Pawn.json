@@ -1,6 +1,7 @@
 {
     "type": "Unit",
     "unitType": "Pawn",
+    "health": 4,
     "sizeX": 64,
     "sizeY": 32,
     "animations": {
@@ -20,7 +21,8 @@
             "offsetX": 96,
             "offsetY": 127,
             "texture": "assets/Images/Units/Blue Units/Pawn/Pawn_Interact Axe.png",
-            "frameCount": 6
+            "frameCount": 6,
+            "actionFrame": 3
         }
     }
 }

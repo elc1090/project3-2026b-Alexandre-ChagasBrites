@@ -1,0 +1,13 @@
+{
+    "type": "Projectile",
+    "sizeX": 64,
+    "sizeY": 64,
+    "animations": {
+        "Idle": {
+            "offsetX": 32,
+            "offsetY": 32,
+            "texture": "assets/Images/Units/Blue Units/Archer/Arrow.png",
+            "frameCount": 1
+        }
+    }
+}

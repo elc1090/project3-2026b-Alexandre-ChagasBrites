@@ -1,6 +1,7 @@
 {
     "type": "Unit",
     "unitType": "Warrior",
+    "health": 4,
     "sizeX": 64,
     "sizeY": 32,
     "animations": {
@@ -26,13 +27,15 @@
             "offsetX": 96,
             "offsetY": 126,
             "texture": "assets/Images/Units/Blue Units/Warrior/Warrior_Attack1.png",
-            "frameCount": 4
+            "frameCount": 4,
+            "actionFrame": 2
         },
         "Attack2": {
             "offsetX": 96,
             "offsetY": 126,
             "texture": "assets/Images/Units/Blue Units/Warrior/Warrior_Attack2.png",
-            "frameCount": 4
+            "frameCount": 4,
+            "actionFrame": 2
         }
     }
 }

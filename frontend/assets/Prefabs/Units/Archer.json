@@ -1,0 +1,28 @@
+{
+    "type": "Unit",
+    "unitType": "Archer",
+    "health": 4,
+    "sizeX": 64,
+    "sizeY": 32,
+    "animations": {
+        "Idle": {
+            "offsetX": 96,
+            "offsetY": 128,
+            "texture": "assets/Images/Units/Blue Units/Archer/Archer_Idle.png",
+            "frameCount": 6
+        },
+        "Run": {
+            "offsetX": 96,
+            "offsetY": 128,
+            "texture": "assets/Images/Units/Blue Units/Archer/Archer_Run.png",
+            "frameCount": 4
+        },
+        "Shoot": {
+            "offsetX": 96,
+            "offsetY": 128,
+            "texture": "assets/Images/Units/Blue Units/Archer/Archer_Shoot.png",
+            "frameCount": 8,
+            "actionFrame": 6
+        }
+    }
+}
