@@ -22,16 +22,62 @@ const game = {
             texture: null
         }
     },
+    tilemap: {
+        sizeX: 0,
+        sizeY: 0,
+        tilesets: [],
+        tiles: []
+    },
     objects: [],
 
-    cursor: {
+    camera: {
         x: 0,
         y: 0,
-        texture: null
+        dragging: false
+    },
+    cursor: {
+        screenX: 0,
+        screenY: 0,
+        worldX: 0,
+        worldY: 0,
+        pointerTexture: null,
+        targetTexture: null
     },
     hotObject: null,
     activeObject: null
 };
+
+// [(l << 3) | (t << 2) | (r << 1) | b];
+const autotileGround = [
+    { x: 192, y: 192 }, // 0000
+    { x: 192, y:   0 }, // 0001
+    { x:   0, y: 192 }, // 0010
+    { x:   0, y:   0 }, // 0011
+    { x: 192, y: 128 }, // 0100
+    { x: 192, y:  64 }, // 0101
+    { x:   0, y: 128 }, // 0110
+    { x:   0, y:  64 }, // 0111
+    { x: 128, y: 192 }, // 1000
+    { x:  128, y:   0 }, // 1001
+    { x:  64, y: 192 }, // 1010
+    { x:  64, y:   0 }, // 1011
+    { x: 128, y: 128 }, // 1100
+    { x: 128, y:  64 }, // 1101
+    { x:  64, y: 128 }, // 1110
+    { x:  64, y:  64 }  // 1111
+];
+
+// [(h << 2) | (l << 1) | r];
+const autotileWall = [
+    { x: 512, y: 320 }, // 000
+    { x: 320, y: 320 }, // 001
+    { x: 448, y: 320 }, // 010
+    { x: 384, y: 320 }, // 011
+    { x: 512, y: 256 }, // 100
+    { x: 320, y: 256 }, // 101
+    { x: 448, y: 256 }, // 110
+    { x: 384, y: 256 }, // 111
+];
 
 async function loadAsset(type, path) {
     if (game.assets[path] === undefined) {
@@ -57,6 +103,16 @@ async function loadAsset(type, path) {
                 animation.texture = await loadAsset("Image", animation.texture);
             }
             game.assets[path] = prefab;
+        } else if (type === "Tilemap") {
+            const response = await fetch(path);
+            if (!response.ok) {
+                return null;
+            }
+            const tilemap = await response.json();
+            for (let i = 0; i < tilemap.tilesets.length; i++) {
+                tilemap.tilesets[i] = await loadAsset("Image", tilemap.tilesets[i]);
+            }
+            game.assets[path] = tilemap;
         }
     }
     return game.assets[path];
@@ -84,7 +140,15 @@ async function loadResources() {
     game.resources.gold.texture = await loadAsset("Image", "assets/Images/UI Elements/Icons/Icon_03.png");
     game.resources.meat.texture = await loadAsset("Image", "assets/Images/UI Elements/Icons/Icon_04.png");
     game.resources.wood.texture = await loadAsset("Image", "assets/Images/UI Elements/Icons/Icon_02.png");
-    game.cursor.texture = await loadAsset("Image", "assets/Images/UI Elements/Cursors/Cursor_04.png");
+    game.cursor.pointerTexture = await loadAsset("Image", "assets/Images/UI Elements/Cursors/Cursor_01.png");
+    game.cursor.targetTexture = await loadAsset("Image", "assets/Images/UI Elements/Cursors/Cursor_04.png");
+}
+
+async function loadTilemap(path) {
+    const tilemap = await loadAsset("Tilemap", path);
+    game.tilemap = tilemap;
+    game.camera.x = game.tilemap.sizeX * 0.5;
+    game.camera.y = game.tilemap.sizeY * 0.5;
 }
 
 async function loadPrefab(x, y, path) {
@@ -109,6 +173,9 @@ async function loadPrefab(x, y, path) {
         textureRegion: { x: 0, y: 0, w: 0, h: 0 },
     };
     objectSetAnimation(object, "Idle");
+    if (object.prefab.type !== "Particle") {
+        object.frame = Math.floor(Math.random() * object.prefab.animations[object.animation].frameCount);
+    }
     if (object.prefab.resourceType === "Sheep") {
         object.actionTimer = Math.random() * 2.0 + 2.0;
     }
@@ -267,12 +334,28 @@ function handleEvent(e) {
 
 function onEvent(e) {
     let consumed = false;
-    if (e instanceof MouseEvent && e.cursor !== null) {
-        game.cursor.x = (e.clientX - canvas.width * 0.5) / 64;
-        game.cursor.y = (e.clientY - canvas.height * 0.5) / 64;
+    if (e instanceof MouseEvent) {
+        if (e.type === "mousedown" && e.button === 1) {
+            consumed = true;
+            game.camera.dragging = true;
+        } else if (e.type === "mouseup" && e.button === 1) {
+            consumed = true;
+            game.camera.dragging = false;
+        }
+        if (game.camera.dragging) {
+            game.camera.x -= e.movementX / 64;
+            game.camera.y -= e.movementY / 64;
+            game.camera.x = Math.max(0, Math.min(game.camera.x, game.tilemap.sizeX));
+            game.camera.y = Math.max(0, Math.min(game.camera.y, game.tilemap.sizeY));
+        }
+
+        game.cursor.screenX = e.clientX;
+        game.cursor.screenY = e.clientY;
+        game.cursor.worldX = (e.clientX - canvas.width * 0.5) / 64 + game.camera.x;
+        game.cursor.worldY = (e.clientY - canvas.height * 0.5) / 64 + game.camera.y;
 
         if (game.activeObject === null) {
-            game.hotObject = getObject(game.cursor.x, game.cursor.y, (object) => {
+            game.hotObject = getObject(game.cursor.worldX, game.cursor.worldY, (object) => {
                 return object.prefab.type === "Unit";
             });
             if (e.type === "mousedown" && e.button === 0) {
@@ -280,22 +363,22 @@ function onEvent(e) {
                 game.activeObject = game.hotObject;
             }
         } else if (game.activeObject.prefab.type === "Unit") {
-            game.hotObject = getObject(game.cursor.x, game.cursor.y, (object) => {
+            game.hotObject = getObject(game.cursor.worldX, game.cursor.worldY, (object) => {
                 return object.prefab.type === "Unit" || canInteract(game.activeObject, object);
             });
             if (e.type === "mousedown" && e.button === 0) {
                 consumed = true;
-                game.activeObject = getObject(game.cursor.x, game.cursor.y, (object) => {
+                game.activeObject = getObject(game.cursor.worldX, game.cursor.worldY, (object) => {
                     return object.prefab.type === "Unit";
                 });
             } else if (e.type === "mousedown" && e.button === 2) {
                 consumed = true;
-                game.activeObject.targetObject = getObject(game.cursor.x, game.cursor.y, (object) => {
+                game.activeObject.targetObject = getObject(game.cursor.worldX, game.cursor.worldY, (object) => {
                     return canInteract(game.activeObject, object);
                 });
                 if (game.activeObject.targetObject === null) {
-                    game.activeObject.targetX = game.cursor.x;
-                    game.activeObject.targetY = game.cursor.y;
+                    game.activeObject.targetX = game.cursor.worldX;
+                    game.activeObject.targetY = game.cursor.worldY;
                     objectSetAnimation(game.activeObject, "Run");
                 }
             }
@@ -313,17 +396,31 @@ function onRender() {
     ctx.resetTransform();
     ctx.translate(canvas.width * 0.5, canvas.height * 0.5);
     ctx.scale(64, 64);
+    ctx.translate(-game.camera.x, -game.camera.y);
 
     ctx.beginPath();
     ctx.strokeStyle = "#ffffff7f";
     ctx.lineWidth = 1.0 / 64.0;
-    for (let i = -5.5; i <= 5.5; i++) {
-        ctx.moveTo(i, -5.5);
-        ctx.lineTo(i, 5.5);
-        ctx.moveTo(-5.5, i);
-        ctx.lineTo(5.5, i);
+    for (let i = 0; i <= game.tilemap.sizeY; i++) {
+        ctx.moveTo(0, i);
+        ctx.lineTo(game.tilemap.sizeX, i);
+    }
+    for (let i = 0; i <= game.tilemap.sizeX; i++) {
+        ctx.moveTo(i, 0);
+        ctx.lineTo(i, game.tilemap.sizeY);
     }
     ctx.stroke();
+
+    for (let y = 0; y < game.tilemap.sizeY; y++) {
+        for (let x = 0; x < game.tilemap.sizeX; x++) {
+            const tile = game.tilemap.tiles[x + y * game.tilemap.sizeX];
+            if (tile == 0) {
+                continue;
+            }
+
+            drawTile(x, y, tile);
+        }
+    }
     
     game.objects.sort((a, b) => { return a.y - b.y; });
     for (let i = 0; i < game.objects.length; i++) {
@@ -370,16 +467,39 @@ function onRender() {
         ctx.drawImage(game.resources.gold.texture, 32, 32);
         ctx.drawImage(game.resources.meat.texture, 32, 96);
         ctx.drawImage(game.resources.wood.texture, 32, 160);
+        ctx.drawImage(game.cursor.pointerTexture, 22, 17, 22, 30, game.cursor.screenX, game.cursor.screenY, 22, 30);
     }
+}
+
+function drawTile(x, y, tile) {
+    const tileset = game.tilemap.tilesets[tile - 1];
+    const l = x == 0 || game.tilemap.tiles[(x - 1) + y * game.tilemap.sizeX] < tile ? 0 : 1;
+    const t = y == 0 || game.tilemap.tiles[x + (y - 1) * game.tilemap.sizeX] < tile ? 0 : 1;
+    const r = x == game.tilemap.sizeX - 1 || game.tilemap.tiles[(x + 1) + y * game.tilemap.sizeX] < tile ? 0 : 1;
+    const b = y == game.tilemap.sizeY - 1 || game.tilemap.tiles[x + (y + 1) * game.tilemap.sizeX] < tile ? 0 : 1;
+
+    if (tile > 1 && b === 0) {
+        const h = tile > 2 || (y < game.tilemap.sizeY - 1 && game.tilemap.tiles[x + (y + 1) * game.tilemap.sizeX] == 1) ? 1 : 0;
+        if (h === 1) {
+            drawTile(x, y, tile - 1);
+        }
+        const position = autotileWall[(h << 2) | (l << 1) | r];
+        ctx.drawImage(tileset, position.x, position.y, 64, 64, x, y - tile + 2, 1, 1);
+    }
+
+    const position = autotileGround[(l << 3) | (t << 2) | (r << 1) | b];
+    const u = tile > 1 ? position.x + 320 : position.x;
+    const v = position.y;
+    ctx.drawImage(tileset, u, v, 64, 64, x, y - tile + 1, 1, 1);
 }
 
 function drawCursor(object) {
     ctx.save();
     ctx.translate(object.x, object.y);
-    ctx.drawImage(game.cursor.texture,   3,   3, 21, 25, -object.prefab.sizeX / 64 * 0.5 -  9 / 64, -object.prefab.sizeY / 64 * 0.5 - 14 / 64, 21 / 64, 25 / 64);
-    ctx.drawImage(game.cursor.texture, 104,   3, 21, 25,  object.prefab.sizeX / 64 * 0.5 - 12 / 64, -object.prefab.sizeY / 64 * 0.5 - 14 / 64, 21 / 64, 25 / 64);
-    ctx.drawImage(game.cursor.texture,   3, 100, 21, 25, -object.prefab.sizeX / 64 * 0.5 -  9 / 64,  object.prefab.sizeY / 64 * 0.5 - 11 / 64, 21 / 64, 25 / 64);
-    ctx.drawImage(game.cursor.texture, 104, 100, 21, 25,  object.prefab.sizeX / 64 * 0.5 - 12 / 64,  object.prefab.sizeY / 64 * 0.5 - 11 / 64, 21 / 64, 25 / 64);
+    ctx.drawImage(game.cursor.targetTexture,   3,   3, 21, 25, -object.prefab.sizeX / 64 * 0.5 -  9 / 64, -object.prefab.sizeY / 64 * 0.5 - 14 / 64, 21 / 64, 25 / 64);
+    ctx.drawImage(game.cursor.targetTexture, 104,   3, 21, 25,  object.prefab.sizeX / 64 * 0.5 - 12 / 64, -object.prefab.sizeY / 64 * 0.5 - 14 / 64, 21 / 64, 25 / 64);
+    ctx.drawImage(game.cursor.targetTexture,   3, 100, 21, 25, -object.prefab.sizeX / 64 * 0.5 -  9 / 64,  object.prefab.sizeY / 64 * 0.5 - 11 / 64, 21 / 64, 25 / 64);
+    ctx.drawImage(game.cursor.targetTexture, 104, 100, 21, 25,  object.prefab.sizeX / 64 * 0.5 - 12 / 64,  object.prefab.sizeY / 64 * 0.5 - 11 / 64, 21 / 64, 25 / 64);
     ctx.restore();
 }
 
@@ -419,18 +539,23 @@ window.addEventListener("load", () => {
 });
 
 function getRandomPosition() {
-    let x = Math.floor(Math.random() * 11) - 5;
-    let y = Math.floor(Math.random() * 11) - 5;
-    while (getObject(x, y, (object) => true) !== null) {
-        x = Math.floor(Math.random() * 11) - 5;
-        y = Math.floor(Math.random() * 11) - 5;
+    let x = Math.floor(Math.random() * game.tilemap.sizeX) + 0.5;
+    let y = Math.floor(Math.random() * game.tilemap.sizeY) + 0.5;
+    let tile = game.tilemap.tiles[Math.floor(x) + Math.floor(y) * game.tilemap.sizeX];
+    y -= tile > 0 ? tile - 1 : 0;
+    while (tile === 0 || getObject(x, y, (object) => true) !== null) {
+        x = Math.floor(Math.random() * game.tilemap.sizeX) + 0.5;
+        y = Math.floor(Math.random() * game.tilemap.sizeY) + 0.5;
+        tile = game.tilemap.tiles[Math.floor(x) + Math.floor(y) * game.tilemap.sizeX];
+        y -= tile > 0 ? tile - 1 : 0;
     }
     return { x: x, y: y };
 }
 
 async function loadLevel() {
     await loadResources();
-    await loadPrefab(0.0, -4.5, "assets/Prefabs/Buildings/Castle.json");
+    await loadTilemap("assets/Tilemaps/Tilemap1.json");
+    await loadPrefab(4.5, 3, "assets/Prefabs/Buildings/Castle.json");
     for (let i = 0; i < 5; i++) {
         const position = getRandomPosition();
         await loadPrefab(position.x, position.y, "assets/Prefabs/Units/Pawn.json");

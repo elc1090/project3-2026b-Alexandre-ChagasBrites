@@ -1,0 +1,14 @@
+{
+    "sizeX": 5,
+    "sizeY": 5,
+    "tilesets": [
+        "assets/Images/Terrain/Tileset/Tilemap_color1.png"
+    ],
+    "tiles":  [
+        1, 1, 1, 0, 1,
+        1, 1, 1, 0, 1,
+        1, 1, 1, 0, 1,
+        0, 0, 0, 0, 0,
+        1, 1, 1, 0, 1
+    ]
+}
