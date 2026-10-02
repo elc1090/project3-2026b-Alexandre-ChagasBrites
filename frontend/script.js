@@ -219,7 +219,19 @@ function onStep(deltatime) {
     game.objects = game.objects.filter((object) => { return object.alive; });
 }
 
+function handleEvent(e) {
+    const result = onEvent(e);
+    if (result) {
+        e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+        return false;
+    }
+    return true;
+}
+
 function onEvent(e) {
+    let consumed = false;
     if (e instanceof MouseEvent && e.cursor !== null) {
         game.cursor.x = (e.clientX - canvas.width * 0.5) / 64;
         game.cursor.y = (e.clientY - canvas.height * 0.5) / 64;
@@ -229,8 +241,7 @@ function onEvent(e) {
                 return object.prefab.type === "Unit";
             });
             if (e.type === "mousedown" && e.button === 0) {
-                e.preventDefault();
-                e.stopImmediatePropagation();
+                consumed = true;
                 game.activeObject = game.hotObject;
             }
         } else if (game.activeObject.prefab.type === "Unit") {
@@ -238,14 +249,12 @@ function onEvent(e) {
                 return object.prefab.type === "Unit" || canInteract(game.activeObject, object);
             });
             if (e.type === "mousedown" && e.button === 0) {
-                e.preventDefault();
-                e.stopImmediatePropagation();
+                consumed = true;
                 game.activeObject = getObject(game.cursor.x, game.cursor.y, (object) => {
                     return object.prefab.type === "Unit";
                 });
             } else if (e.type === "mousedown" && e.button === 2) {
-                e.preventDefault();
-                e.stopImmediatePropagation();
+                consumed = true;
                 game.activeObject.targetObject = getObject(game.cursor.x, game.cursor.y, (object) => {
                     return canInteract(game.activeObject, object);
                 });
@@ -265,6 +274,7 @@ function onEvent(e) {
             }
         }
     }
+    return consumed;
 }
 
 function onRender() {
@@ -357,11 +367,11 @@ function gameloop(timestamp) {
     requestAnimationFrame(gameloop);
 }
 
-window.addEventListener("mousemove", (e) => { onEvent(e); });
-window.addEventListener("mousedown", (e) => { onEvent(e); });
-window.addEventListener("mouseup", (e) => { onEvent(e); });
-window.addEventListener("keydown", (e) => { game.input[e.key] = true; onEvent(e); });
-window.addEventListener("keyup", (e) => { game.input[e.key] = false; });
+window.addEventListener("mousemove", (e) => { return handleEvent(e); });
+window.addEventListener("mousedown", (e) => { return handleEvent(e); });
+window.addEventListener("mouseup", (e) => { return handleEvent(e); });
+window.addEventListener("keydown", (e) => { game.input[e.key] = true; return handleEvent(e); });
+window.addEventListener("keyup", (e) => { game.input[e.key] = false; return handleEvent(e); });
 window.addEventListener("blur", (e) => { game.input = {}; });
 
 window.addEventListener("resize", resizeCanvas);
