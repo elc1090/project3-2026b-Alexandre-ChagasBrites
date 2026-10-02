@@ -1,0 +1,24 @@
+{
+    "type": "Resource",
+    "resourceType": "Sheep",
+    "animations": {
+        "Idle": {
+            "offsetX": 64,
+            "offsetY": 64,
+            "texture": "assets/Images/Terrain/Resources/Meat/Sheep/Sheep_Idle.png",
+            "frameCount": 6
+        },
+        "Move": {
+            "offsetX": 64,
+            "offsetY": 64,
+            "texture": "assets/Images/Terrain/Resources/Meat/Sheep/Sheep_Move.png",
+            "frameCount": 4
+        },
+        "Grass": {
+            "offsetX": 64,
+            "offsetY": 64,
+            "texture": "assets/Images/Terrain/Resources/Meat/Sheep/Sheep_Grass.png",
+            "frameCount": 12
+        }
+    }
+}

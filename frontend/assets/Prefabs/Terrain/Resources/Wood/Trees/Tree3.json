@@ -1,0 +1,18 @@
+{
+    "type": "Resource",
+    "resourceType": "Tree",
+    "animations": {
+        "Idle": {
+            "offsetX": 96,
+            "offsetY": 160,
+            "texture": "assets/Images/Terrain/Resources/Wood/Trees/Tree3.png",
+            "frameCount": 8
+        },
+        "Stump": {
+            "offsetX": 96,
+            "offsetY": 224,
+            "texture": "assets/Images/Terrain/Resources/Wood/Trees/Stump 3.png",
+            "frameCount": 1
+        }
+    }
+}

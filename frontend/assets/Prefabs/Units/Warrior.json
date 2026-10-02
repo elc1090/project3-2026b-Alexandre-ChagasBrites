@@ -1,0 +1,36 @@
+{
+    "type": "Unit",
+    "unitType": "Warrior",
+    "animations": {
+        "Idle": {
+            "offsetX": 96,
+            "offsetY": 126,
+            "texture": "assets/Images/Units/Blue Units/Warrior/Warrior_Idle.png",
+            "frameCount": 8
+        },
+        "Run": {
+            "offsetX": 96,
+            "offsetY": 126,
+            "texture": "assets/Images/Units/Blue Units/Warrior/Warrior_Run.png",
+            "frameCount": 6
+        },
+        "Guard": {
+            "offsetX": 96,
+            "offsetY": 126,
+            "texture": "assets/Images/Units/Blue Units/Warrior/Warrior_Guard.png",
+            "frameCount": 6
+        },
+        "Attack1": {
+            "offsetX": 96,
+            "offsetY": 126,
+            "texture": "assets/Images/Units/Blue Units/Warrior/Warrior_Attack1.png",
+            "frameCount": 4
+        },
+        "Attack2": {
+            "offsetX": 96,
+            "offsetY": 126,
+            "texture": "assets/Images/Units/Blue Units/Warrior/Warrior_Attack2.png",
+            "frameCount": 4
+        }
+    }
+}
