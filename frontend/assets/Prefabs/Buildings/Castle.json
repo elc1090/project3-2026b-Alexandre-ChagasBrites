@@ -3,6 +3,10 @@
     "buildingType": "Castle",
     "sizeX": 320,
     "sizeY": 128,
+    "selectionX": -160,
+    "selectionY": -128,
+    "selectionW": 320,
+    "selectionH": 192,
     "animations": {
         "Idle": {
             "offsetX": 160,

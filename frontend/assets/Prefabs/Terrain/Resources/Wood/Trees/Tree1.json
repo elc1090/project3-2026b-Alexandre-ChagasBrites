@@ -4,6 +4,10 @@
     "health": 4,
     "sizeX": 64,
     "sizeY": 32,
+    "selectionX": -32,
+    "selectionY": -112,
+    "selectionW": 64,
+    "selectionH": 128,
     "animations": {
         "Idle": {
             "offsetX": 96,

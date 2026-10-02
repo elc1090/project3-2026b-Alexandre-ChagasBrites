@@ -43,6 +43,7 @@ const game = {
         pointerTexture: null,
         targetTexture: null
     },
+    drawOrder: [],
     hotObject: null,
     activeObject: null
 };
@@ -149,6 +150,10 @@ async function loadTilemap(path) {
     game.tilemap = tilemap;
     game.camera.x = game.tilemap.sizeX * 0.5;
     game.camera.y = game.tilemap.sizeY * 0.5;
+    game.drawOrder = [];
+    for (let i = 0; i < game.tilemap.sizeY + game.tilemap.tilesets.length; i++) {
+        game.drawOrder.push([]);
+    }
 }
 
 async function loadPrefab(options, path) {
@@ -210,15 +215,21 @@ function getWorldObject(x, y, filter) {
 }
 
 function getScreenObject(x, y, filter) {
+    let selectedObject = null;
+    let selectedOffset = undefined;
     for (let i = 0; i < game.objects.length; i++) {
         const object = game.objects[i];
-        let offsetX = x - ((object.x - object.prefab.sizeX / 64 * 0.5 - game.camera.x) * 64 + canvas.width  * 0.5);
-        let offsetY = y - ((object.y - object.z - object.prefab.sizeY / 64 * 0.5 - game.camera.y) * 64 + canvas.height * 0.5);
-        if (offsetX >= 0.0 && offsetX < object.prefab.sizeX && offsetY >= 0.0 && offsetY < object.prefab.sizeY && filter(object)) {
-            return object;
+        let offsetX = x - ((object.x + object.prefab.selectionX / 64 - game.camera.x) * 64 + canvas.width  * 0.5);
+        let offsetY = y - ((object.y - object.z + object.prefab.selectionY / 64 - game.camera.y) * 64 + canvas.height * 0.5);
+        if (offsetX >= 0.0 && offsetX < object.prefab.selectionW && offsetY >= 0.0 && offsetY < object.prefab.selectionH && filter(object)) {
+            const offset = Math.abs(offsetX - object.prefab.selectionW * 0.5) + Math.abs(offsetY - object.prefab.selectionH * 0.5);
+            if (selectedObject === null || offset < selectedOffset) {
+                selectedObject = object;
+                selectedOffset = offset;
+            }
         }
     }
-    return null;
+    return selectedObject;
 }
 
 function getWorldPosition(x, y) {
@@ -266,7 +277,6 @@ function onStep(deltatime) {
                 } else if (object.animation === "Shoot") {
                     object.actionTimer = object.prefab.animations[object.animation].frameCount * 0.1;
                     const time = (10 + Math.sqrt(10 * 10 - 4 * 10 * 0.5)) * 0.5;
-                    console.log(time);
                     const velocityX = (object.targetObject.x - object.x) / 2.0;
                     const velocityY = (object.targetObject.y - object.y) / 2.0;
                     loadPrefab({ x: object.x, y: object.y, z: object.z + 0.5, velocityX: velocityX, velocityY: velocityY, velocityZ: 10 }, "assets/Prefabs/Units/Arrow.json");
@@ -418,7 +428,6 @@ function onEvent(e) {
         const worldPosition = getWorldPosition(game.cursor.screenX, game.cursor.screenY);
         game.cursor.worldX = worldPosition.x;
         game.cursor.worldY = worldPosition.y;
-        console.log(worldPosition);
 
         if (game.activeObject === null) {
             game.hotObject = getScreenObject(game.cursor.screenX, game.cursor.screenY, (object) => {
@@ -477,51 +486,37 @@ function onRender() {
     }
     ctx.stroke();
 
+    for (let i = 0; i < game.drawOrder.length; i++) {
+        game.drawOrder[i] = [];
+    }
+    for (let i = 0; i < game.objects.length; i++) {
+        const object = game.objects[i];
+        const index = Math.floor(object.y);
+        game.drawOrder[index].push(object);
+    }
+    for (let i = 0; i < game.drawOrder.length; i++) {
+        game.drawOrder[i].sort((a, b) => { return (a.y + a.z) - (b.y + b.z); });
+    }
+
     for (let y = 0; y < game.tilemap.sizeY; y++) {
         for (let x = 0; x < game.tilemap.sizeX; x++) {
             const tile = game.tilemap.tiles[x + y * game.tilemap.sizeX];
             if (tile == 0) {
                 continue;
             }
-
             drawTile(x, y, tile);
         }
-    }
-    
-    game.objects.sort((a, b) => { return (a.y - a.z) - (b.y - b.z); });
-    for (let i = 0; i < game.objects.length; i++) {
-        const object = game.objects[i];
 
-        if (game.hotObject == object || game.activeObject == object) {
-            drawCursor(object);
+        for (let i = 0; i < game.drawOrder[y].length; i++) {
+            const object = game.drawOrder[y][i];
+            drawObject(object);
         }
-
-        ctx.save();
-        ctx.translate(object.x, object.y - object.z);
-
-        /*ctx.strokeStyle = "white";
-        ctx.lineWidth = 1.0 / 64.0;
-        ctx.strokeRect(-object.prefab.sizeX / 64 * 0.5, -object.prefab.sizeY / 64 * 0.5, object.prefab.sizeX / 64, object.prefab.sizeY / 64);
-
-        ctx.strokeStyle = "red";
-        ctx.lineWidth = 1.0 / 64.0;
-        ctx.beginPath();
-        ctx.moveTo(0, 0);
-        ctx.lineTo(1, 0);
-        ctx.stroke();
-
-        ctx.strokeStyle = "green";
-        ctx.lineWidth = 1.0 / 64.0;
-        ctx.beginPath();
-        ctx.moveTo(0, 0);
-        ctx.lineTo(0, -1);
-        ctx.stroke();*/
-
-        ctx.rotate(object.rotation);
-        ctx.scale(object.flip ? -1.0 : 1.0, 1.0);
-        ctx.translate(-object.offsetX / 64, -object.offsetY / 64);
-        ctx.drawImage(object.texture, object.textureRegion.x, object.textureRegion.y, object.textureRegion.w, object.textureRegion.h, 0, 0, object.textureRegion.w / 64, object.textureRegion.h / 64);
-        ctx.restore();
+    }
+    for (let y = game.tilemap.sizeY; y < game.drawOrder.length; y++) {
+        for (let i = 0; i < game.drawOrder[y].length; i++) {
+            const object = game.drawOrder[y][i];
+            drawObject(object);
+        }
     }
 
     ctx.resetTransform();
@@ -558,6 +553,44 @@ function drawTile(x, y, tile) {
     const u = tile > 1 ? position.x + 320 : position.x;
     const v = position.y;
     ctx.drawImage(tileset, u, v, 64, 64, x, y - tile + 1, 1, 1);
+}
+
+function drawObject(object) {
+    if (game.hotObject == object || game.activeObject == object) {
+        drawCursor(object);
+    }
+
+    ctx.save();
+    ctx.translate(object.x, object.y - object.z);
+
+    /*ctx.strokeStyle = "white";
+    ctx.lineWidth = 1.0 / 64.0;
+    ctx.strokeRect(object.prefab.selectionX / 64, object.prefab.selectionY / 64, object.prefab.selectionW / 64, object.prefab.selectionH / 64);
+    
+    ctx.strokeStyle = "blue";
+    ctx.lineWidth = 1.0 / 64.0;
+    ctx.strokeRect(-object.prefab.sizeX / 64 * 0.5, -object.prefab.sizeY / 64 * 0.5, object.prefab.sizeX / 64, object.prefab.sizeY / 64);
+
+    ctx.strokeStyle = "red";
+    ctx.lineWidth = 1.0 / 64.0;
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(1, 0);
+    ctx.stroke();
+
+    ctx.strokeStyle = "green";
+    ctx.lineWidth = 1.0 / 64.0;
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(0, -1);
+    ctx.stroke();*/
+
+    ctx.rotate(object.rotation);
+    ctx.scale(object.flip ? -1.0 : 1.0, 1.0);
+    ctx.translate(-object.offsetX / 64, -object.offsetY / 64);
+    ctx.drawImage(object.texture, object.textureRegion.x, object.textureRegion.y, object.textureRegion.w, object.textureRegion.h, 0, 0, object.textureRegion.w / 64, object.textureRegion.h / 64);
+    
+    ctx.restore();
 }
 
 function drawCursor(object) {
@@ -631,11 +664,11 @@ async function loadLevel() {
     for (let i = 0; i < 5; i++) {
         await loadPrefab(getRandomPosition(), "assets/Prefabs/Units/Archer.json");
     }
-    for (let i = 0; i < 15; i++) {
+    for (let i = 0; i < 20; i++) {
         const treePath = `assets/Prefabs/Terrain/Resources/Wood/Trees/Tree${Math.floor(Math.random() * 4 + 1)}.json`;
         await loadPrefab(getRandomPosition(), treePath);
     }
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 10; i++) {
         await loadPrefab(getRandomPosition(), "assets/Prefabs/Terrain/Resources/Meat/Sheep.json");
     }
 }
