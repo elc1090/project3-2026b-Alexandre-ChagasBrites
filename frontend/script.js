@@ -9,9 +9,18 @@ const game = {
     assets: {},
 
     resources: {
-        gold: 0,
-        meat: 0,
-        wood: 0
+        gold: {
+            count: 0,
+            texture: null
+        },
+        meat: {
+            count: 0,
+            texture: null
+        },
+        wood: {
+            count: 0,
+            texture: null
+        }
     },
     objects: [],
 
@@ -29,6 +38,10 @@ async function loadAsset(type, path) {
                 image.src = path;
             });
             game.assets[path] = image;
+        } else if (type === "Font") {
+            const font = new FontFace(path.family, path.source);
+            game.assets[path] = await font.load();
+            document.fonts.add(font);
         } else if (type === "Prefab") {
             const response = await fetch(path);
             if (!response.ok) {
@@ -60,9 +73,18 @@ function objectSetAnimation(object, animation) {
     object.textureRegion.h = object.texture.height;
 }
 
+async function loadResources() {
+    loadAsset("Font", { family: "Patrick Hand", source: "url('assets/PatrickHand-Regular.ttf')" });
+    loadAsset("Prefab", "assets/Prefabs/Particles/Dust1.json");
+    game.resources.gold.texture = await loadAsset("Image", "assets/Images/UI Elements/Icons/Icon_03.png");
+    game.resources.meat.texture = await loadAsset("Image", "assets/Images/UI Elements/Icons/Icon_04.png");
+    game.resources.wood.texture = await loadAsset("Image", "assets/Images/UI Elements/Icons/Icon_02.png");
+}
+
 async function loadCursor() {
     const object = {
         prefab: {},
+        alive: true,
         x: 0,
         y: 0,
         offsetX: 64,
@@ -78,6 +100,7 @@ async function loadPrefab(x, y, path) {
     const prefab = await loadAsset("Prefab", path);
     const object = {
         prefab: prefab,
+        alive: true,
         x: x,
         y: y,
         offsetX: 0,
@@ -95,7 +118,6 @@ async function loadPrefab(x, y, path) {
     };
     objectSetAnimation(object, "Idle");
     game.objects.push(object);
-
     if (game.selectedObject === null && object.prefab.type === "Unit") {
         game.selectedObject = object;
     }
@@ -116,6 +138,14 @@ function getObject(x, y) {
     return null;
 }
 
+function canInteract(object, targetObject) {
+    if (object.prefab.unitType === "Pawn" && targetObject.prefab.type === "Resource" && targetObject.animation !== "Stump") {
+        return true;
+    } else {
+        return false;
+    }
+}
+
 function onStep(deltatime) {
     for (let i = 0; i < game.objects.length; i++) {
         const object = game.objects[i];
@@ -125,7 +155,15 @@ function onStep(deltatime) {
                 if (object.actionTimer > 0.0) {
                     object.actionTimer -= Math.min(object.actionTimer, deltatime);
                 } else {
-                    objectSetAnimation(object.targetObject, "Stump");   
+                    if (object.targetObject.prefab.resourceType === "Sheep") {
+                        game.resources.meat.count++;
+                        object.targetObject.alive = false;
+                        loadPrefab(object.targetObject.x, object.targetObject.y, "assets/Prefabs/Particles/Dust1.json");
+                    } else if (object.targetObject.prefab.resourceType === "Tree") {
+                        game.resources.wood.count++;
+                        objectSetAnimation(object.targetObject, "Stump");
+                        loadPrefab(object.targetObject.x, object.targetObject.y, "assets/Prefabs/Particles/Dust1.json");
+                    }
                     object.targetObject = null;
                 }
             }
@@ -180,6 +218,8 @@ function onStep(deltatime) {
                 const frames = Math.floor(object.frameTimer);
                 if (object.frame + frames >= animation.frameCount && object.animation === "Interact" && object.targetObject === null) {
                     objectSetAnimation(object, "Idle");
+                } else if (object.frame + frames >= animation.frameCount && object.prefab.type === "Particle") {
+                    object.alive = false;
                 } else {
                     object.frame = (object.frame + frames) % animation.frameCount;
                     object.frameTimer -= frames;
@@ -188,6 +228,7 @@ function onStep(deltatime) {
             }
         }
     }   
+    game.objects = game.objects.filter((object) => { return object.alive; });
 }
 
 function onEvent(e) {
@@ -197,7 +238,7 @@ function onEvent(e) {
 
         if (game.selectedObject !== null && e.type === "mousedown") {
             game.selectedObject.targetObject = getObject(game.cursor.x, game.cursor.y);
-            if (game.selectedObject.targetObject === game.selectedObject || (game.selectedObject.targetObject !== null && game.selectedObject.targetObject.prefab.type !== "Resource")) {
+            if (game.selectedObject.targetObject !== null && !canInteract(game.selectedObject, game.selectedObject.targetObject)) {
                 game.selectedObject.targetObject = null;
             }
             if (game.selectedObject.targetObject === null) {
@@ -252,6 +293,18 @@ function onRender() {
         ctx.drawImage(object.texture, object.textureRegion.x, object.textureRegion.y, object.textureRegion.w, object.textureRegion.h, 0, 0, object.textureRegion.w / 64, object.textureRegion.h / 64);
         ctx.restore();
     }
+
+    ctx.resetTransform();
+    {
+        ctx.fillStyle = "white";
+        ctx.font = "64px Patrick Hand";
+        ctx.fillText(`${game.resources.gold.count}`, 112, 80);
+        ctx.fillText(`${game.resources.meat.count}`, 112, 144);
+        ctx.fillText(`${game.resources.wood.count}`, 112, 208);
+        ctx.drawImage(game.resources.gold.texture, 32, 32);
+        ctx.drawImage(game.resources.meat.texture, 32, 96);
+        ctx.drawImage(game.resources.wood.texture, 32, 160);
+    }
 }
 
 function resizeCanvas() {
@@ -289,6 +342,7 @@ window.addEventListener("load", () => {
     requestAnimationFrame(gameloop);
 });
 
+loadResources();
 loadCursor();
 loadPrefab(0.0, 0.0, "assets/Prefabs/Units/Pawn.json");
 for (let i = 0; i < 10; i++) {

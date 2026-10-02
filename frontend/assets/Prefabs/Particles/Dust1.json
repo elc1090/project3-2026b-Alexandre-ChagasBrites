@@ -1,0 +1,11 @@
+{
+    "type": "Particle",
+    "animations": {
+        "Idle": {
+            "offsetX": 32,
+            "offsetY": 32,
+            "texture": "assets/Images/Particle FX/Dust_01.png",
+            "frameCount": 8
+        }
+    }
+}
