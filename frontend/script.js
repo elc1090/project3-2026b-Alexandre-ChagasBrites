@@ -500,8 +500,45 @@ function onRender() {
     }
     for (let i = 0; i < game.objects.length; i++) {
         const object = game.objects[i];
-        const index = Math.floor(object.y);
-        game.drawOrder[index].push(object);
+        game.drawOrder[Math.floor(object.y)].push(object);
+        /*if (game.hotObject == object || game.activeObject == object) {
+            game.drawOrder[Math.floor(object.y - object.prefab.sizeY / 64 * 0.5 + 14 / 64.0)].push({ 
+                x: object.x - object.prefab.sizeX / 64 * 0.5,
+                y: object.y - object.prefab.sizeY / 64 * 0.5,
+                z: object.z,
+                offsetX: 9,
+                offsetY: 14,
+                texture: game.cursor.targetTexture,
+                textureRegion: { x: 3, y: 3, w: 21, h: 25 }
+            });
+            game.drawOrder[Math.floor(object.y - object.prefab.sizeY / 64 * 0.5 + 14 / 64.0)].push({ 
+                x: object.x + object.prefab.sizeX / 64 * 0.5,
+                y: object.y - object.prefab.sizeY / 64 * 0.5,
+                z: object.z,
+                offsetX: 12,
+                offsetY: 14,
+                texture: game.cursor.targetTexture,
+                textureRegion: { x: 104, y: 3, w: 21, h: 25 }
+            });
+            game.drawOrder[Math.floor(object.y + object.prefab.sizeY / 64 * 0.5 + 11 / 64.0)].push({ 
+                x: object.x - object.prefab.sizeX / 64 * 0.5,
+                y: object.y + object.prefab.sizeY / 64 * 0.5,
+                z: object.z,
+                offsetX: 9,
+                offsetY: 11,
+                texture: game.cursor.targetTexture,
+                textureRegion: { x: 3, y: 100, w: 21, h: 25 }
+            });
+            game.drawOrder[Math.floor(object.y + object.prefab.sizeY / 64 * 0.5 + 11 / 64.0)].push({ 
+                x: object.x + object.prefab.sizeX / 64 * 0.5,
+                y: object.y + object.prefab.sizeY / 64 * 0.5,
+                z: object.z,
+                offsetX: 12,
+                offsetY: 11,
+                texture: game.cursor.targetTexture,
+                textureRegion: { x: 104, y: 100, w: 21, h: 25 }
+            });
+        }*/
     }
     for (let i = 0; i < game.drawOrder.length; i++) {
         game.drawOrder[i].sort((a, b) => { return (a.y + a.z) - (b.y + b.z); });
@@ -582,7 +619,7 @@ function drawObject(object) {
     ctx.strokeStyle = "blue";
     ctx.lineWidth = 1.0 / 64.0;
     ctx.strokeRect(-object.prefab.sizeX / 64 * 0.5, -object.prefab.sizeY / 64 * 0.5, object.prefab.sizeX / 64, object.prefab.sizeY / 64);
-
+    
     ctx.strokeStyle = "red";
     ctx.lineWidth = 1.0 / 64.0;
     ctx.beginPath();
@@ -601,7 +638,11 @@ function drawObject(object) {
     ctx.scale(object.flip ? -1.0 : 1.0, 1.0);
     ctx.translate(-object.offsetX / 64, -object.offsetY / 64);
     ctx.drawImage(object.texture, object.textureRegion.x, object.textureRegion.y, object.textureRegion.w, object.textureRegion.h, 0, 0, object.textureRegion.w / 64, object.textureRegion.h / 64);
-    
+    if (game.hotObject == object) {
+        ctx.globalCompositeOperation = "screen";
+        ctx.drawImage(object.texture, object.textureRegion.x, object.textureRegion.y, object.textureRegion.w, object.textureRegion.h, 0, 0, object.textureRegion.w / 64, object.textureRegion.h / 64);
+    }
+
     ctx.restore();
 }
 
@@ -663,9 +704,72 @@ function getRandomPosition() {
     return { x: x, y: y, z: z };
 }
 
+function generateLayer(width, height, prob, death, birth, iter) {
+    const tiles = [];
+    for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+            tiles.push(Math.random() < prob);
+        }
+    }
+    for (let i = 0; i < iter; i++) {
+        const neighbourCount = [];
+        for (let y = 0; y < height; y++) {
+            for (let x = 0; x < width; x++) {
+                let count = 0;
+                count += x <= 0 ? 0 : tiles[(x - 1) + (y + 0) * width];
+                count += x >= width - 1 ? 0 : tiles[(x + 1) + (y + 0) * width];
+                count += y <= 0 ? 0 : tiles[(x + 0) + (y - 1) * width];
+                count += y >= height - 1 ? 0 : tiles[(x + 0) + (y + 1) * width];
+                count += x <= 0 && y <= 0 ? 0 : tiles[(x - 1) + (y - 1) * width];
+                count += x >= width - 1 && y <= 0 ? 0 : tiles[(x + 1) + (y - 1) * width];
+                count += x <= 0 && y >= height - 1 ? 0 : tiles[(x - 1) + (y + 1) * width];
+                count += x >= width - 1 && y >= height - 1 ? 0 : tiles[(x + 1) + (y + 1) * width];
+                neighbourCount.push(count);
+            }
+        }
+        for (let y = 0; y < height; y++) {
+            for (let x = 0; x < width; x++) {
+                const tile = tiles[x + y * width];
+                const count = tile + neighbourCount[x + y * width];
+                tiles[x + y * width] = ((tile == 1 && count >= death) || count > birth) ? 1 : 0;
+            }
+        }
+    }
+    return tiles;
+}
+
+async function generateTilemap() {
+    const tilemap = {
+        sizeX: 32,
+        sizeY: 32,
+        tilesets: [ 
+            await loadAsset("Image", "assets/Images/Terrain/Tileset/Tilemap_color1.png"),
+            await loadAsset("Image", "assets/Images/Terrain/Tileset/Tilemap_color2.png")
+        ],
+        tiles: generateLayer(32, 32, 0.5, 3, 4, 4)
+    };
+
+    const treeLayer = generateLayer(tilemap.sizeX, tilemap.sizeY, 0.4, 5, 4, 4);
+    for (let y = 0; y < tilemap.sizeY; y++) {
+        for (let x = 0; x < tilemap.sizeX; x++) {
+            if (tilemap.tiles[x + y * tilemap.sizeX] == 1 && treeLayer[x + y * tilemap.sizeX] == 1) {
+                tilemap.tiles[x + y * tilemap.sizeX]++;
+            }
+        }
+    }
+
+    for (let y = 0; y < tilemap.sizeY; y++) {
+        game.drawOrder.push([]);
+    } 
+
+    game.tilemap = tilemap;
+    game.camera.x = game.tilemap.sizeX * 0.5;
+    game.camera.y = game.tilemap.sizeY * 0.5;
+}
+
 async function loadLevel() {
     await loadResources();
-    await loadTilemap("assets/Tilemaps/Tilemap1.json");
+    await generateTilemap();
     await loadPrefab({ x: 4.5, y: 3, z: 2 }, "assets/Prefabs/Buildings/Castle.json");
     for (let i = 0; i < 5; i++) {
         await loadPrefab(getRandomPosition(), "assets/Prefabs/Units/Pawn.json");
@@ -676,10 +780,21 @@ async function loadLevel() {
     for (let i = 0; i < 5; i++) {
         await loadPrefab(getRandomPosition(), "assets/Prefabs/Units/Archer.json");
     }
-    for (let i = 0; i < 20; i++) {
+
+    const treeLayer = generateLayer(game.tilemap.sizeX, game.tilemap.sizeY, 0.45, 5, 4, 4);
+    for (let y = 0; y < game.tilemap.sizeY; y++) {
+        for (let x = 0; x < game.tilemap.sizeX; x++) {
+            if (game.tilemap.tiles[x + y * game.tilemap.sizeX] > 0 && treeLayer[x + y * game.tilemap.sizeX] == 1) {
+                const treePath = `assets/Prefabs/Terrain/Resources/Wood/Trees/Tree${Math.floor(Math.random() * 4 + 1)}.json`;
+                await loadPrefab({ x: x + 0.5, y: y + 0.5, z: getTilemapHeight(x, y) }, treePath);
+            }
+        }
+    }
+
+    /*for (let i = 0; i < 20; i++) {
         const treePath = `assets/Prefabs/Terrain/Resources/Wood/Trees/Tree${Math.floor(Math.random() * 4 + 1)}.json`;
         await loadPrefab(getRandomPosition(), treePath);
-    }
+    }*/
     for (let i = 0; i < 10; i++) {
         await loadPrefab(getRandomPosition(), "assets/Prefabs/Terrain/Resources/Meat/Sheep.json");
     }
