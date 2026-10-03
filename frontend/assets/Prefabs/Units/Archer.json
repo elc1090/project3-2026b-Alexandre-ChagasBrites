@@ -8,6 +8,7 @@
     "selectionY": -80,
     "selectionW": 64,
     "selectionH": 96,
+    "avatar": "assets/Images/UI Elements/Human Avatars/Avatars_03.png",
     "animations": {
         "Idle": {
             "offsetX": 96,

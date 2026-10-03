@@ -100,6 +100,9 @@ async function loadAsset(type, path) {
                 return null;
             }
             const prefab = await response.json();
+            if (prefab.type === "Unit") {
+                prefab.avatar = await loadAsset("Image", prefab.avatar);
+            }
             for (const animation of Object.values(prefab.animations)) {
                 animation.texture = await loadAsset("Image", animation.texture);
             }
@@ -222,7 +225,7 @@ function getScreenObject(x, y, filter) {
         let offsetX = x - ((object.x + object.prefab.selectionX / 64 - game.camera.x) * 64 + canvas.width  * 0.5);
         let offsetY = y - ((object.y - object.z + object.prefab.selectionY / 64 - game.camera.y) * 64 + canvas.height * 0.5);
         if (offsetX >= 0.0 && offsetX < object.prefab.selectionW && offsetY >= 0.0 && offsetY < object.prefab.selectionH && filter(object)) {
-            const offset = Math.abs(offsetX - object.prefab.selectionW * 0.5) + Math.abs(offsetY - object.prefab.selectionH * 0.5);
+            const offset = Math.abs(offsetX - object.prefab.selectionW * 0.5) + Math.abs(offsetY - object.prefab.selectionH * 0.5) - (object.y + object.z);
             if (selectedObject === null || offset < selectedOffset) {
                 selectedObject = object;
                 selectedOffset = offset;
@@ -255,6 +258,10 @@ function canInteract(object, targetObject) {
 }
 
 function onStep(deltatime) {
+    game.camera.x += ((game.input["ArrowRight"] || 0) - (game.input["ArrowLeft"] || 0)) * 8 * deltatime;
+    game.camera.y += ((game.input["ArrowDown"] || 0) - (game.input["ArrowUp"] || 0)) * 8 * deltatime;
+    game.camera.x = Math.max(0, Math.min(game.camera.x, game.tilemap.sizeX));
+    game.camera.y = Math.max(-game.tilemap.tilesets.length + 1, Math.min(game.camera.y, game.tilemap.sizeY));
 
     // Pre Move
     for (let i = 0; i < game.objects.length; i++) {
@@ -270,16 +277,18 @@ function onStep(deltatime) {
                 if (object.animation == "Idle" && (object.x !== object.targetX || object.y !== object.targetY)) {
                     objectSetAnimation(object, "Run");
                 }
+            } else if (object.targetObject !== null && object.prefab.unitType === "Archer") {
+                object.flip = (object.targetObject.x - object.x) < 0.0;
             }
             if (object.targetObject !== null && (object.animation === "Interact" || object.animation === "Attack1" || object.animation === "Shoot")) {
                 if (object.actionTimer > 0.0) {
                     object.actionTimer -= Math.min(object.actionTimer, deltatime);
                 } else if (object.animation === "Shoot") {
                     object.actionTimer = object.prefab.animations[object.animation].frameCount * 0.1;
-                    const time = (10 + Math.sqrt(10 * 10 - 4 * 10 * 0.5)) * 0.5;
-                    const velocityX = (object.targetObject.x - object.x) / 2.0;
-                    const velocityY = (object.targetObject.y - object.y) / 2.0;
-                    loadPrefab({ x: object.x, y: object.y, z: object.z + 0.5, velocityX: velocityX, velocityY: velocityY, velocityZ: 10 }, "assets/Prefabs/Units/Arrow.json");
+                    const time = (8 + Math.sqrt(8 * 8 + 2 * 10 * (object.z - object.targetObject.z))) / 10.0;
+                    const velocityX = (object.targetObject.x - object.x) / time;
+                    const velocityY = (object.targetObject.y - object.y) / time;
+                    loadPrefab({ x: object.x, y: object.y, z: object.z + 0.5, velocityX: velocityX, velocityY: velocityY, velocityZ: 8 }, "assets/Prefabs/Units/Arrow.json");
                 } else if (object.x === object.targetX && object.y === object.targetY) {
                     object.targetObject.health--;
                     if (object.targetObject.health > 0) {
@@ -325,7 +334,7 @@ function onStep(deltatime) {
             object.y += object.velocityY * deltatime;
             object.z += object.velocityZ * deltatime;
             object.rotation = Math.atan2(-object.velocityZ + object.velocityY, object.velocityX);
-            object.alive = object.z > 0.0;
+            object.alive = object.z > getTilemapHeight(object.x, object.y);
         }
     }   
 
@@ -420,7 +429,7 @@ function onEvent(e) {
             game.camera.x -= e.movementX / 64;
             game.camera.y -= e.movementY / 64;
             game.camera.x = Math.max(0, Math.min(game.camera.x, game.tilemap.sizeX));
-            game.camera.y = Math.max(0, Math.min(game.camera.y, game.tilemap.sizeY));
+            game.camera.y = Math.max(-game.tilemap.tilesets.length + 1, Math.min(game.camera.y, game.tilemap.sizeY));
         }
 
         game.cursor.screenX = e.clientX;
@@ -530,6 +539,9 @@ function onRender() {
         ctx.drawImage(game.resources.meat.texture, 32, 96);
         ctx.drawImage(game.resources.wood.texture, 32, 160);
         ctx.drawImage(game.cursor.pointerTexture, 22, 17, 22, 30, game.cursor.screenX, game.cursor.screenY, 22, 30);
+        if (game.activeObject !== null) {
+            ctx.drawImage(game.activeObject.prefab.avatar, -16, canvas.height + 16 - game.activeObject.prefab.avatar.height);
+        }
     }
 }
 
