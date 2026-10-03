@@ -30,6 +30,7 @@ const game = {
     },
     objects: [],
 
+    debug: false,
     camera: {
         x: 0,
         y: 0,
@@ -154,7 +155,7 @@ async function loadTilemap(path) {
     game.camera.x = game.tilemap.sizeX * 0.5;
     game.camera.y = game.tilemap.sizeY * 0.5;
     game.drawOrder = [];
-    for (let i = 0; i < game.tilemap.sizeY + game.tilemap.tilesets.length; i++) {
+    for (let i = 0; i < game.tilemap.sizeY; i++) {
         game.drawOrder.push([]);
     }
 }
@@ -233,6 +234,22 @@ function getScreenObject(x, y, filter) {
         }
     }
     return selectedObject;
+}
+
+function screenToWorld(x, y) {
+    return {
+        x: (x - canvas.width * 0.5) / 64 + game.camera.x,
+        y: (y - canvas.height * 0.5) / 64 + game.camera.y
+    };   
+}
+
+function worldToScreen(x, y, w, h) {
+    return {
+        x: (x - game.camera.x) * 64 + canvas.width * 0.5,
+        y: (y - game.camera.y) * 64 + canvas.height * 0.5,
+        w: w * 64,
+        h: h * 64
+    };   
 }
 
 function getWorldPosition(x, y) {
@@ -495,110 +512,81 @@ function onRender() {
     }
     ctx.stroke();
 
+    drawWorld();
+
+    ctx.resetTransform();
+    ctx.fillStyle = "white";
+    ctx.font = "64px Patrick Hand";
+    ctx.fillText(`${game.resources.gold.count}`.padStart(3, "0"), 112, 80);
+    ctx.fillText(`${game.resources.meat.count}`.padStart(3, "0"), 112, 144);
+    ctx.fillText(`${game.resources.wood.count}`.padStart(3, "0"), 112, 208);
+    ctx.drawImage(game.resources.gold.texture, 32, 32);
+    ctx.drawImage(game.resources.meat.texture, 32, 96);
+    ctx.drawImage(game.resources.wood.texture, 32, 160);
+    ctx.drawImage(game.cursor.pointerTexture, 22, 17, 22, 30, game.cursor.screenX, game.cursor.screenY, 22, 30);
+    if (game.activeObject !== null) {
+        ctx.drawImage(game.activeObject.prefab.avatar, -16, canvas.height + 16 - game.activeObject.prefab.avatar.height);
+    }
+}
+
+function drawWorld() {
+    const minBounds = screenToWorld(0, 0);
+    const maxBounds = screenToWorld(canvas.width, canvas.height);
+    maxBounds.y += game.tilemap.tilesets.length - 1;
+
     for (let i = 0; i < game.drawOrder.length; i++) {
         game.drawOrder[i] = [];
     }
     for (let i = 0; i < game.objects.length; i++) {
         const object = game.objects[i];
-        game.drawOrder[Math.floor(object.y)].push(object);
-        /*if (game.hotObject == object || game.activeObject == object) {
-            game.drawOrder[Math.floor(object.y - object.prefab.sizeY / 64 * 0.5 + 14 / 64.0)].push({ 
-                x: object.x - object.prefab.sizeX / 64 * 0.5,
-                y: object.y - object.prefab.sizeY / 64 * 0.5,
-                z: object.z,
-                offsetX: 9,
-                offsetY: 14,
-                texture: game.cursor.targetTexture,
-                textureRegion: { x: 3, y: 3, w: 21, h: 25 }
-            });
-            game.drawOrder[Math.floor(object.y - object.prefab.sizeY / 64 * 0.5 + 14 / 64.0)].push({ 
-                x: object.x + object.prefab.sizeX / 64 * 0.5,
-                y: object.y - object.prefab.sizeY / 64 * 0.5,
-                z: object.z,
-                offsetX: 12,
-                offsetY: 14,
-                texture: game.cursor.targetTexture,
-                textureRegion: { x: 104, y: 3, w: 21, h: 25 }
-            });
-            game.drawOrder[Math.floor(object.y + object.prefab.sizeY / 64 * 0.5 + 11 / 64.0)].push({ 
-                x: object.x - object.prefab.sizeX / 64 * 0.5,
-                y: object.y + object.prefab.sizeY / 64 * 0.5,
-                z: object.z,
-                offsetX: 9,
-                offsetY: 11,
-                texture: game.cursor.targetTexture,
-                textureRegion: { x: 3, y: 100, w: 21, h: 25 }
-            });
-            game.drawOrder[Math.floor(object.y + object.prefab.sizeY / 64 * 0.5 + 11 / 64.0)].push({ 
-                x: object.x + object.prefab.sizeX / 64 * 0.5,
-                y: object.y + object.prefab.sizeY / 64 * 0.5,
-                z: object.z,
-                offsetX: 12,
-                offsetY: 11,
-                texture: game.cursor.targetTexture,
-                textureRegion: { x: 104, y: 100, w: 21, h: 25 }
-            });
-        }*/
+        const rect = worldToScreen(
+            object.x - object.offsetX / 64,
+            object.y - object.z - object.offsetY / 64,
+            object.textureRegion.w / 64,
+            object.textureRegion.h / 64
+        );
+        if (rect.x + rect.w < 0 || rect.x > canvas.width || rect.y + rect.h < 0 || rect.y > canvas.height) {
+            continue;
+        }
+        const index = Math.max(0, Math.min(Math.floor(object.y), game.drawOrder.length - 1));
+        game.drawOrder[index].push(object);
     }
     for (let i = 0; i < game.drawOrder.length; i++) {
         game.drawOrder[i].sort((a, b) => { return (a.y + a.z) - (b.y + b.z); });
     }
 
-    for (let y = 0; y < game.tilemap.sizeY; y++) {
-        for (let x = 0; x < game.tilemap.sizeX; x++) {
+    for (let y = Math.max(0, Math.floor(minBounds.y)); y < Math.min(game.tilemap.sizeY, Math.ceil(maxBounds.y)); y++) {
+        for (let x = Math.max(0, Math.floor(minBounds.x)); x < Math.min(game.tilemap.sizeX, Math.ceil(maxBounds.x)); x++) {
             const tile = game.tilemap.tiles[x + y * game.tilemap.sizeX];
             if (tile == 0) {
                 continue;
             }
             drawTile(x, y, tile);
         }
-
         for (let i = 0; i < game.drawOrder[y].length; i++) {
             const object = game.drawOrder[y][i];
             drawObject(object);
-        }
-    }
-    for (let y = game.tilemap.sizeY; y < game.drawOrder.length; y++) {
-        for (let i = 0; i < game.drawOrder[y].length; i++) {
-            const object = game.drawOrder[y][i];
-            drawObject(object);
-        }
-    }
-
-    ctx.resetTransform();
-    {
-        ctx.fillStyle = "white";
-        ctx.font = "64px Patrick Hand";
-        ctx.fillText(`${game.resources.gold.count}`.padStart(3, "0"), 112, 80);
-        ctx.fillText(`${game.resources.meat.count}`.padStart(3, "0"), 112, 144);
-        ctx.fillText(`${game.resources.wood.count}`.padStart(3, "0"), 112, 208);
-        ctx.drawImage(game.resources.gold.texture, 32, 32);
-        ctx.drawImage(game.resources.meat.texture, 32, 96);
-        ctx.drawImage(game.resources.wood.texture, 32, 160);
-        ctx.drawImage(game.cursor.pointerTexture, 22, 17, 22, 30, game.cursor.screenX, game.cursor.screenY, 22, 30);
-        if (game.activeObject !== null) {
-            ctx.drawImage(game.activeObject.prefab.avatar, -16, canvas.height + 16 - game.activeObject.prefab.avatar.height);
         }
     }
 }
 
 function drawTile(x, y, tile) {
     const tileset = game.tilemap.tilesets[tile - 1];
-    const l = x == 0 || game.tilemap.tiles[(x - 1) + y * game.tilemap.sizeX] < tile ? 0 : 1;
-    const t = y == 0 || game.tilemap.tiles[x + (y - 1) * game.tilemap.sizeX] < tile ? 0 : 1;
-    const r = x == game.tilemap.sizeX - 1 || game.tilemap.tiles[(x + 1) + y * game.tilemap.sizeX] < tile ? 0 : 1;
-    const b = y == game.tilemap.sizeY - 1 || game.tilemap.tiles[x + (y + 1) * game.tilemap.sizeX] < tile ? 0 : 1;
+    const l = x == 0 ? 0 : game.tilemap.tiles[(x - 1) + y * game.tilemap.sizeX];
+    const t = y == 0 ? 0 : game.tilemap.tiles[x + (y - 1) * game.tilemap.sizeX];
+    const r = x == game.tilemap.sizeX - 1 ? 0 : game.tilemap.tiles[(x + 1) + y * game.tilemap.sizeX];
+    const b = y == game.tilemap.sizeY - 1 ? 0 : game.tilemap.tiles[x + (y + 1) * game.tilemap.sizeX];
 
-    if (tile > 1 && b === 0) {
-        const h = tile > 2 || (y < game.tilemap.sizeY - 1 && game.tilemap.tiles[x + (y + 1) * game.tilemap.sizeX] == 1) ? 1 : 0;
+    if (tile > 1 && b < tile) {
+        const h = tile > 2 || (l + r + b) > 0 ? 1 : 0;
         if (h === 1) {
             drawTile(x, y, tile - 1);
         }
-        const position = autotileWall[(h << 2) | (l << 1) | r];
+        const position = autotileWall[(h << 2) | (l < tile ? 0 : 2) | (r < tile ? 0 : 1)];
         ctx.drawImage(tileset, position.x, position.y, 64, 64, x, y - tile + 2, 1, 1);
     }
 
-    const position = autotileGround[(l << 3) | (t << 2) | (r << 1) | b];
+    const position = autotileGround[(l < tile ? 0 : 8) | (t < tile ? 0 : 4) | (r < tile ? 0 : 2) | (b < tile ? 0 : 1)];
     const u = tile > 1 ? position.x + 320 : position.x;
     const v = position.y;
     ctx.drawImage(tileset, u, v, 64, 64, x, y - tile + 1, 1, 1);
@@ -612,27 +600,29 @@ function drawObject(object) {
     ctx.save();
     ctx.translate(object.x, object.y - object.z);
 
-    /*ctx.strokeStyle = "white";
-    ctx.lineWidth = 1.0 / 64.0;
-    ctx.strokeRect(object.prefab.selectionX / 64, object.prefab.selectionY / 64, object.prefab.selectionW / 64, object.prefab.selectionH / 64);
-    
-    ctx.strokeStyle = "blue";
-    ctx.lineWidth = 1.0 / 64.0;
-    ctx.strokeRect(-object.prefab.sizeX / 64 * 0.5, -object.prefab.sizeY / 64 * 0.5, object.prefab.sizeX / 64, object.prefab.sizeY / 64);
-    
-    ctx.strokeStyle = "red";
-    ctx.lineWidth = 1.0 / 64.0;
-    ctx.beginPath();
-    ctx.moveTo(0, 0);
-    ctx.lineTo(1, 0);
-    ctx.stroke();
+    if (game.debug) {
+        ctx.strokeStyle = "white";
+        ctx.lineWidth = 1.0 / 64.0;
+        ctx.strokeRect(object.prefab.selectionX / 64, object.prefab.selectionY / 64, object.prefab.selectionW / 64, object.prefab.selectionH / 64);
+        
+        ctx.strokeStyle = "blue";
+        ctx.lineWidth = 1.0 / 64.0;
+        ctx.strokeRect(-object.prefab.sizeX / 64 * 0.5, -object.prefab.sizeY / 64 * 0.5, object.prefab.sizeX / 64, object.prefab.sizeY / 64);
+        
+        ctx.strokeStyle = "red";
+        ctx.lineWidth = 1.0 / 64.0;
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(1, 0);
+        ctx.stroke();
 
-    ctx.strokeStyle = "green";
-    ctx.lineWidth = 1.0 / 64.0;
-    ctx.beginPath();
-    ctx.moveTo(0, 0);
-    ctx.lineTo(0, -1);
-    ctx.stroke();*/
+        ctx.strokeStyle = "green";
+        ctx.lineWidth = 1.0 / 64.0;
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(0, -1);
+        ctx.stroke();
+    }
 
     ctx.rotate(object.rotation);
     ctx.scale(object.flip ? -1.0 : 1.0, 1.0);
@@ -704,11 +694,11 @@ function getRandomPosition() {
     return { x: x, y: y, z: z };
 }
 
-function generateLayer(width, height, prob, death, birth, iter) {
+function generateLayer(width, height, death, birth, iter, prob) {
     const tiles = [];
     for (let y = 0; y < height; y++) {
         for (let x = 0; x < width; x++) {
-            tiles.push(Math.random() < prob);
+            tiles.push(Math.random() < prob(x, y));
         }
     }
     for (let i = 0; i < iter; i++) {
@@ -716,21 +706,21 @@ function generateLayer(width, height, prob, death, birth, iter) {
         for (let y = 0; y < height; y++) {
             for (let x = 0; x < width; x++) {
                 let count = 0;
-                count += x <= 0 ? 0 : tiles[(x - 1) + (y + 0) * width];
-                count += x >= width - 1 ? 0 : tiles[(x + 1) + (y + 0) * width];
-                count += y <= 0 ? 0 : tiles[(x + 0) + (y - 1) * width];
-                count += y >= height - 1 ? 0 : tiles[(x + 0) + (y + 1) * width];
-                count += x <= 0 && y <= 0 ? 0 : tiles[(x - 1) + (y - 1) * width];
-                count += x >= width - 1 && y <= 0 ? 0 : tiles[(x + 1) + (y - 1) * width];
-                count += x <= 0 && y >= height - 1 ? 0 : tiles[(x - 1) + (y + 1) * width];
-                count += x >= width - 1 && y >= height - 1 ? 0 : tiles[(x + 1) + (y + 1) * width];
+                count += x == 0 ? 0 : tiles[(x - 1) + (y + 0) * width];
+                count += x == width - 1 ? 0 : tiles[(x + 1) + (y + 0) * width];
+                count += y == 0 ? 0 : tiles[(x + 0) + (y - 1) * width];
+                count += y == height - 1 ? 0 : tiles[(x + 0) + (y + 1) * width];
+                count += x == 0 && y == 0 ? 0 : tiles[(x - 1) + (y - 1) * width];
+                count += x == width - 1 && y == 0 ? 0 : tiles[(x + 1) + (y - 1) * width];
+                count += x == 0 && y == height - 1 ? 0 : tiles[(x - 1) + (y + 1) * width];
+                count += x == width - 1 && y == height - 1 ? 0 : tiles[(x + 1) + (y + 1) * width];
                 neighbourCount.push(count);
             }
         }
         for (let y = 0; y < height; y++) {
             for (let x = 0; x < width; x++) {
                 const tile = tiles[x + y * width];
-                const count = tile + neighbourCount[x + y * width];
+                const count = neighbourCount[x + y * width];
                 tiles[x + y * width] = ((tile == 1 && count >= death) || count > birth) ? 1 : 0;
             }
         }
@@ -738,39 +728,57 @@ function generateLayer(width, height, prob, death, birth, iter) {
     return tiles;
 }
 
-async function generateTilemap() {
+async function generateTilemap(sizeX, sizeY) {
     const tilemap = {
-        sizeX: 32,
-        sizeY: 32,
+        sizeX: sizeX,
+        sizeY: sizeY,
         tilesets: [ 
             await loadAsset("Image", "assets/Images/Terrain/Tileset/Tilemap_color1.png"),
-            await loadAsset("Image", "assets/Images/Terrain/Tileset/Tilemap_color2.png")
+            await loadAsset("Image", "assets/Images/Terrain/Tileset/Tilemap_color2.png"),
+            await loadAsset("Image", "assets/Images/Terrain/Tileset/Tilemap_color3.png")
         ],
-        tiles: generateLayer(32, 32, 0.5, 3, 4, 4)
+        tiles: generateLayer(sizeX, sizeY, 3, 4, 4, (x, y) => {
+            return 1.0 - (Math.abs(x - sizeX * 0.5) / sizeX + Math.abs(y - sizeY * 0.5) / sizeY);
+        })
     };
 
-    const treeLayer = generateLayer(tilemap.sizeX, tilemap.sizeY, 0.4, 5, 4, 4);
-    for (let y = 0; y < tilemap.sizeY; y++) {
-        for (let x = 0; x < tilemap.sizeX; x++) {
-            if (tilemap.tiles[x + y * tilemap.sizeX] == 1 && treeLayer[x + y * tilemap.sizeX] == 1) {
-                tilemap.tiles[x + y * tilemap.sizeX]++;
+    for (let i = 1; i <= 2; i++) {
+        const mountainLayer = generateLayer(sizeX, sizeY, 4, 4, 4, (x, y) => {
+            return tilemap.tiles[x + y * sizeX] === i ? 0.4 + i * 0.05 : 0
+        });
+        for (let y = 0; y < sizeY; y++) {
+            for (let x = 0; x < sizeX; x++) {
+                if (tilemap.tiles[x + y * sizeX] == i && mountainLayer[x + y * sizeX] == 1) {
+                    tilemap.tiles[x + y * sizeX] = i + 1;
+                }
             }
         }
     }
 
+    game.tilemap = tilemap;
+    game.camera.x = tilemap.sizeX * 0.5;
+    game.camera.y = tilemap.sizeY * 0.5;
+    game.drawOrder = [];
     for (let y = 0; y < tilemap.sizeY; y++) {
         game.drawOrder.push([]);
-    } 
+    }
 
-    game.tilemap = tilemap;
-    game.camera.x = game.tilemap.sizeX * 0.5;
-    game.camera.y = game.tilemap.sizeY * 0.5;
+    const treeLayer = generateLayer(sizeX, sizeY, 4, 4, 4, () => 0.45);
+    for (let y = 0; y < sizeY; y++) {
+        for (let x = 0; x < sizeX; x++) {
+            if (tilemap.tiles[x + y * sizeX] > 0 && treeLayer[x + y * sizeX] == 1) {
+                const treePath = `assets/Prefabs/Terrain/Resources/Wood/Trees/Tree${Math.floor(Math.random() * 4 + 1)}.json`;
+                await loadPrefab({ x: x + 0.5 + (Math.random() - 0.5) * 0.5, y: y + 0.5 + (Math.random() - 0.5) * 0.5, z: getTilemapHeight(x, y) }, treePath);
+            }
+        }
+    }
 }
 
 async function loadLevel() {
     await loadResources();
-    await generateTilemap();
-    await loadPrefab({ x: 4.5, y: 3, z: 2 }, "assets/Prefabs/Buildings/Castle.json");
+    await generateTilemap(48, 24);
+
+    //await loadPrefab({ x: 4.5, y: 3, z: 2 }, "assets/Prefabs/Buildings/Castle.json");
     for (let i = 0; i < 5; i++) {
         await loadPrefab(getRandomPosition(), "assets/Prefabs/Units/Pawn.json");
     }
@@ -780,21 +788,6 @@ async function loadLevel() {
     for (let i = 0; i < 5; i++) {
         await loadPrefab(getRandomPosition(), "assets/Prefabs/Units/Archer.json");
     }
-
-    const treeLayer = generateLayer(game.tilemap.sizeX, game.tilemap.sizeY, 0.45, 5, 4, 4);
-    for (let y = 0; y < game.tilemap.sizeY; y++) {
-        for (let x = 0; x < game.tilemap.sizeX; x++) {
-            if (game.tilemap.tiles[x + y * game.tilemap.sizeX] > 0 && treeLayer[x + y * game.tilemap.sizeX] == 1) {
-                const treePath = `assets/Prefabs/Terrain/Resources/Wood/Trees/Tree${Math.floor(Math.random() * 4 + 1)}.json`;
-                await loadPrefab({ x: x + 0.5, y: y + 0.5, z: getTilemapHeight(x, y) }, treePath);
-            }
-        }
-    }
-
-    /*for (let i = 0; i < 20; i++) {
-        const treePath = `assets/Prefabs/Terrain/Resources/Wood/Trees/Tree${Math.floor(Math.random() * 4 + 1)}.json`;
-        await loadPrefab(getRandomPosition(), treePath);
-    }*/
     for (let i = 0; i < 10; i++) {
         await loadPrefab(getRandomPosition(), "assets/Prefabs/Terrain/Resources/Meat/Sheep.json");
     }
