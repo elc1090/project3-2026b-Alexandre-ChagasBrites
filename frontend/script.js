@@ -123,22 +123,6 @@ async function loadAsset(type, path) {
     return game.assets[path];
 }
 
-function objectSetAnimation(object, animation) {
-    if (object.animation === animation) {
-        return;
-    }
-    object.offsetX = object.prefab.animations[animation].offsetX;
-    object.offsetY = object.prefab.animations[animation].offsetY;
-    object.frame = 0;
-    object.frameTimer = 0;
-    object.animation = animation;
-    object.texture = object.prefab.animations[animation].texture;
-    object.textureRegion.x = 0;
-    object.textureRegion.y = 0;
-    object.textureRegion.w = object.texture.width / object.prefab.animations[animation].frameCount;
-    object.textureRegion.h = object.texture.height;
-}
-
 async function loadResources() {
     loadAsset("Font", { family: "Patrick Hand", source: "url('assets/PatrickHand-Regular.ttf')" });
     loadAsset("Prefab", "assets/Prefabs/Particles/Dust1.json");
@@ -183,7 +167,7 @@ async function loadPrefab(options, path) {
         texture: null,
         textureRegion: { x: 0, y: 0, w: 0, h: 0 },
     };
-    objectSetAnimation(object, "Idle");
+    setObjectAnimation(object, "Idle");
     if (object.prefab.type === "Projectile") {
         object.velocityX = options.velocityX || 0;
         object.velocityY = options.velocityY || 0;
@@ -269,6 +253,22 @@ function getWorldPosition(x, y) {
     return position;
 }
 
+function setObjectAnimation(object, animation) {
+    if (object.animation === animation) {
+        return;
+    }
+    object.offsetX = object.prefab.animations[animation].offsetX;
+    object.offsetY = object.prefab.animations[animation].offsetY;
+    object.frame = 0;
+    object.frameTimer = 0;
+    object.animation = animation;
+    object.texture = object.prefab.animations[animation].texture;
+    object.textureRegion.x = 0;
+    object.textureRegion.y = 0;
+    object.textureRegion.w = object.texture.width / object.prefab.animations[animation].frameCount;
+    object.textureRegion.h = object.texture.height;
+}
+
 function canInteract(object, targetObject) {
     return (object.prefab.unitType === "Pawn" && targetObject.prefab.type === "Resource" && targetObject.health > 0) ||
         ((object.prefab.unitType === "Warrior" || object.prefab.unitType === "Archer") && targetObject.prefab.type === "Unit" && targetObject.health > 0);
@@ -292,7 +292,7 @@ function onStep(deltatime) {
                 }
                 object.targetY = object.targetObject.y;
                 if (object.animation == "Idle" && (object.x !== object.targetX || object.y !== object.targetY)) {
-                    objectSetAnimation(object, "Run");
+                    setObjectAnimation(object, "Run");
                 }
             } else if (object.targetObject !== null && object.prefab.unitType === "Archer") {
                 object.flip = (object.targetObject.x - object.x) < 0.0;
@@ -316,7 +316,7 @@ function onStep(deltatime) {
                             object.targetObject.alive = false;
                         } else if (object.targetObject.prefab.resourceType === "Tree") {
                             game.resources.wood.count += 5;
-                            objectSetAnimation(object.targetObject, "Stump");
+                            setObjectAnimation(object.targetObject, "Stump");
                         } else if (object.targetObject.prefab.type === "Unit") {
                             object.targetObject.alive = false;
                         }
@@ -332,13 +332,13 @@ function onStep(deltatime) {
                 } else {
                     const action = Math.floor(Math.random() * 2.0);
                     if (action === 0) {
-                        objectSetAnimation(object, object.animation === "Idle" ? "Grass" : "Idle");
+                        setObjectAnimation(object, object.animation === "Idle" ? "Grass" : "Idle");
                     } else {
                         object.targetX = object.x + Math.random() * 2.0 - 1.0;
                         object.targetY = object.y + Math.random() * 2.0 - 1.0;
                         object.targetX = Math.max(0, Math.min(object.targetX, game.tilemap.sizeX));
                         object.targetY = Math.max(0, Math.min(object.targetY, game.tilemap.sizeY));
-                        objectSetAnimation(object, "Move");
+                        setObjectAnimation(object, "Move");
                     }
                     object.actionTimer = object.animation === "Grass"
                         ? object.prefab.animations[object.animation].frameCount * 0.1
@@ -385,15 +385,15 @@ function onStep(deltatime) {
         if (object.targetObject !== null && ((object.x === object.targetX && object.y === object.targetY) || object.prefab.unitType === "Archer") && (object.animation !== "Interact" && object.animation !== "Attack1" && object.animation !== "Shoot")) {
             object.flip = object.targetObject.x - object.x < 0.0;
             if (object.prefab.unitType === "Pawn") {
-                objectSetAnimation(object, "Interact");
+                setObjectAnimation(object, "Interact");
             } else if (object.prefab.unitType === "Warrior") {
-                objectSetAnimation(object, "Attack1");
+                setObjectAnimation(object, "Attack1");
             } else if (object.prefab.unitType === "Archer") {
-                objectSetAnimation(object, "Shoot");
+                setObjectAnimation(object, "Shoot");
             }
             object.actionTimer = object.prefab.animations[object.animation].actionFrame * 0.1;
         } else if ((object.animation === "Run" || object.animation === "Move") && object.x === object.targetX && object.y === object.targetY) {
-            objectSetAnimation(object, "Idle");
+            setObjectAnimation(object, "Idle");
         }
     }   
 
@@ -406,7 +406,7 @@ function onStep(deltatime) {
                 const animation = object.prefab.animations[object.animation];
                 const frames = Math.floor(object.frameTimer);
                 if (object.frame + frames >= animation.frameCount && (object.animation === "Interact" || object.animation === "Attack1") && (object.targetObject === null || (object.x !== object.targetX && object.y !== object.targetY))) {
-                    objectSetAnimation(object, "Idle");
+                    setObjectAnimation(object, "Idle");
                 } else if (object.frame + frames >= animation.frameCount && object.prefab.type === "Particle") {
                     object.alive = false;
                 } else {
@@ -480,7 +480,7 @@ function onEvent(e) {
                 if (game.activeObject.targetObject === null) {
                     game.activeObject.targetX = game.cursor.worldX;
                     game.activeObject.targetY = game.cursor.worldY;
-                    objectSetAnimation(game.activeObject, "Run");
+                    setObjectAnimation(game.activeObject, "Run");
                 }
             }
         }
@@ -530,10 +530,7 @@ function onRender() {
 }
 
 function drawWorld() {
-    const minBounds = screenToWorld(0, 0);
-    const maxBounds = screenToWorld(canvas.width, canvas.height);
-    maxBounds.y += game.tilemap.tilesets.length - 1;
-
+    const drawSort = (a, b) => { return (a.y + a.z) - (b.y + b.z); };
     for (let i = 0; i < game.drawOrder.length; i++) {
         game.drawOrder[i] = [];
     }
@@ -551,20 +548,39 @@ function drawWorld() {
         const index = Math.max(0, Math.min(Math.floor(object.y), game.drawOrder.length - 1));
         game.drawOrder[index].push(object);
     }
-    for (let i = 0; i < game.drawOrder.length; i++) {
-        game.drawOrder[i].sort((a, b) => { return (a.y + a.z) - (b.y + b.z); });
-    }
 
-    for (let y = Math.max(0, Math.floor(minBounds.y)); y < Math.min(game.tilemap.sizeY, Math.ceil(maxBounds.y)); y++) {
-        for (let x = Math.max(0, Math.floor(minBounds.x)); x < Math.min(game.tilemap.sizeX, Math.ceil(maxBounds.x)); x++) {
+    const minBounds = screenToWorld(0, 0);
+    const maxBounds = screenToWorld(canvas.width, canvas.height);
+
+    minBounds.x = Math.max(0, Math.floor(minBounds.x));
+    minBounds.y = Math.max(0, Math.floor(minBounds.y));
+    maxBounds.x = Math.min(game.tilemap.sizeX, Math.ceil(maxBounds.x));
+    maxBounds.y = Math.min(game.tilemap.sizeY, Math.ceil(maxBounds.y + game.tilemap.tilesets.length - 1));
+
+    for (let y = minBounds.y; y < maxBounds.y; y++) {
+        for (let x = minBounds.x; x < maxBounds.x; x++) {
             const tile = game.tilemap.tiles[x + y * game.tilemap.sizeX];
             if (tile == 0) {
                 continue;
             }
             drawTile(x, y, tile);
         }
-        for (let i = 0; i < game.drawOrder[y].length; i++) {
-            const object = game.drawOrder[y][i];
+        const drawArray = game.drawOrder[y];
+        drawArray.sort(drawSort);
+        for (let i = 0; i < drawArray.length; i++) {
+            const object = drawArray[i];
+            drawObject(object);
+        }
+    }
+
+    minBounds.y = maxBounds.y;
+    maxBounds.y = Math.min(game.drawOrder.length, maxBounds.y + game.tilemap.tilesets.length - 1);
+
+    for (let y = minBounds.y; y < maxBounds.y; y++) {
+        const drawArray = game.drawOrder[y];
+        drawArray.sort(drawSort);
+        for (let i = 0; i < drawArray.length; i++) {
+            const object = drawArray[i];
             drawObject(object);
         }
     }
