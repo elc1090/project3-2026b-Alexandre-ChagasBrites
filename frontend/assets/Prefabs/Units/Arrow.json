@@ -6,7 +6,7 @@
         "Idle": {
             "offsetX": 32,
             "offsetY": 32,
-            "texture": "assets/Images/Units/Blue Units/Archer/Arrow.png",
+            "texture": "assets/Images/Units/${Color} Units/Archer/Arrow.png",
             "frameCount": 1
         }
     }

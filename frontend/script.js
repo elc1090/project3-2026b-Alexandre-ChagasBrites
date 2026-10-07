@@ -45,6 +45,7 @@ const game = {
         targetTexture: null
     },
     drawOrder: [],
+    teamColor: ["Blue","Red","Yellow","Purple","Black",][Math.floor(Math.random() * 5)],
     hotObject: null,
     activeObject: null
 };
@@ -102,10 +103,10 @@ async function loadAsset(type, path) {
             }
             const prefab = await response.json();
             if (prefab.type === "Unit") {
-                prefab.avatar = await loadAsset("Image", prefab.avatar);
+                prefab.avatar = await loadAsset("Image", prefab.avatar.replace("${Color}", game.teamColor));
             }
             for (const animation of Object.values(prefab.animations)) {
-                animation.texture = await loadAsset("Image", animation.texture);
+                animation.texture = await loadAsset("Image", animation.texture.replace("${Color}", game.teamColor));
             }
             game.assets[path] = prefab;
         } else if (type === "Tilemap") {
@@ -531,6 +532,9 @@ function onEvent(e) {
                     game.activeObject.alive = false;
                     game.activeObject = null;
                 }
+            } else if (e.type === "mousedown" && e.button === 0) {
+                consumed = true;
+                game.activeObject = game.hotObject;
             }
         }
     } else if (e instanceof KeyboardEvent) {

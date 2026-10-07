@@ -8,37 +8,37 @@
     "selectionY": -80,
     "selectionW": 64,
     "selectionH": 96,
-    "avatar": "assets/Images/UI Elements/Human Avatars/Avatars_01.png",
+    "avatar": "assets/Images/UI Elements/Human Avatars/${Color}/Avatars_Warrior.png",
     "animations": {
         "Idle": {
             "offsetX": 96,
             "offsetY": 126,
-            "texture": "assets/Images/Units/Blue Units/Warrior/Warrior_Idle.png",
+            "texture": "assets/Images/Units/${Color} Units/Warrior/Warrior_Idle.png",
             "frameCount": 8
         },
         "Run": {
             "offsetX": 96,
             "offsetY": 126,
-            "texture": "assets/Images/Units/Blue Units/Warrior/Warrior_Run.png",
+            "texture": "assets/Images/Units/${Color} Units/Warrior/Warrior_Run.png",
             "frameCount": 6
         },
         "Guard": {
             "offsetX": 96,
             "offsetY": 126,
-            "texture": "assets/Images/Units/Blue Units/Warrior/Warrior_Guard.png",
+            "texture": "assets/Images/Units/${Color} Units/Warrior/Warrior_Guard.png",
             "frameCount": 6
         },
         "Attack1": {
             "offsetX": 96,
             "offsetY": 126,
-            "texture": "assets/Images/Units/Blue Units/Warrior/Warrior_Attack1.png",
+            "texture": "assets/Images/Units/${Color} Units/Warrior/Warrior_Attack1.png",
             "frameCount": 4,
             "actionFrame": 2
         },
         "Attack2": {
             "offsetX": 96,
             "offsetY": 126,
-            "texture": "assets/Images/Units/Blue Units/Warrior/Warrior_Attack2.png",
+            "texture": "assets/Images/Units/${Color} Units/Warrior/Warrior_Attack2.png",
             "frameCount": 4,
             "actionFrame": 2
         }

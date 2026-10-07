@@ -8,24 +8,24 @@
     "selectionY": -80,
     "selectionW": 64,
     "selectionH": 96,
-    "avatar": "assets/Images/UI Elements/Human Avatars/Avatars_03.png",
+    "avatar": "assets/Images/UI Elements/Human Avatars/${Color}/Avatars_Archer.png",
     "animations": {
         "Idle": {
             "offsetX": 96,
             "offsetY": 128,
-            "texture": "assets/Images/Units/Blue Units/Archer/Archer_Idle.png",
+            "texture": "assets/Images/Units/${Color} Units/Archer/Archer_Idle.png",
             "frameCount": 6
         },
         "Run": {
             "offsetX": 96,
             "offsetY": 128,
-            "texture": "assets/Images/Units/Blue Units/Archer/Archer_Run.png",
+            "texture": "assets/Images/Units/${Color} Units/Archer/Archer_Run.png",
             "frameCount": 4
         },
         "Shoot": {
             "offsetX": 96,
             "offsetY": 128,
-            "texture": "assets/Images/Units/Blue Units/Archer/Archer_Shoot.png",
+            "texture": "assets/Images/Units/${Color} Units/Archer/Archer_Shoot.png",
             "frameCount": 8,
             "actionFrame": 6
         }
