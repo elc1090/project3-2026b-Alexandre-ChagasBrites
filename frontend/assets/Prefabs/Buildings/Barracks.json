@@ -1,0 +1,18 @@
+{
+    "type": "Building",
+    "buildingType": "Barracks",
+    "sizeX": 192,
+    "sizeY": 128,
+    "selectionX": -96,
+    "selectionY": -144,
+    "selectionW": 192,
+    "selectionH": 208,
+    "animations": {
+        "Idle": {
+            "offsetX": 96,
+            "offsetY": 192,
+            "texture": "assets/Images/Buildings/Blue Buildings/Barracks.png",
+            "frameCount": 1
+        }
+    }
+}

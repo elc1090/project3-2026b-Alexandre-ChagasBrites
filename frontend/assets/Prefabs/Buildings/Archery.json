@@ -1,0 +1,18 @@
+{
+    "type": "Building",
+    "buildingType": "Archery",
+    "sizeX": 192,
+    "sizeY": 128,
+    "selectionX": -96,
+    "selectionY": -128,
+    "selectionW": 192,
+    "selectionH": 192,
+    "animations": {
+        "Idle": {
+            "offsetX": 96,
+            "offsetY": 176,
+            "texture": "assets/Images/Buildings/Blue Buildings/Archery.png",
+            "frameCount": 1
+        }
+    }
+}

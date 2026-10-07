@@ -180,6 +180,12 @@ async function loadPrefab(options, path) {
         object.actionTimer = Math.random() * 2.0 + 2.0;
     }
     game.objects.push(object);
+    return object;
+}
+
+async function loadBuilding(path) {
+    const object = await loadPrefab({}, path);
+    game.activeObject = object;
 }
 
 function getTilemapHeight(x, y) {
@@ -457,7 +463,7 @@ function onEvent(e) {
 
         if (game.activeObject === null) {
             game.hotObject = getScreenObject(game.cursor.screenX, game.cursor.screenY, (object) => {
-                return object.prefab.type === "Unit";
+                return object.prefab.type === "Unit" || object.prefab.type === "Building";
             });
             if (e.type === "mousedown" && e.button === 0) {
                 consumed = true;
@@ -465,12 +471,12 @@ function onEvent(e) {
             }
         } else if (game.activeObject.prefab.type === "Unit") {
             game.hotObject = getScreenObject(game.cursor.screenX, game.cursor.screenY, (object) => {
-                return object.prefab.type === "Unit" || canInteract(game.activeObject, object);
+                return object.prefab.type === "Unit" || object.prefab.type === "Building" || canInteract(game.activeObject, object);
             });
             if (e.type === "mousedown" && e.button === 0) {
                 consumed = true;
                 game.activeObject = getScreenObject(game.cursor.screenX, game.cursor.screenY, (object) => {
-                    return object.prefab.type === "Unit";
+                    return object.prefab.type === "Unit" || object.prefab.type === "Building";
                 });
             } else if (e.type === "mousedown" && e.button === 2) {
                 consumed = true;
@@ -482,6 +488,39 @@ function onEvent(e) {
                     game.activeObject.targetY = game.cursor.worldY;
                     setObjectAnimation(game.activeObject, "Run");
                 }
+            }
+        } else if (game.activeObject.prefab.type === "Building") {
+            game.hotObject = getScreenObject(game.cursor.screenX, game.cursor.screenY, (object) => {
+                return object.prefab.type === "Unit" || object.prefab.type === "Building";
+            });
+
+            game.activeObject.x = Math.floor(worldPosition.x) + ((game.activeObject.prefab.sizeX / 64) % 2 == 1 ? 0.5 : 0);
+            game.activeObject.y = Math.floor(worldPosition.y) + ((game.activeObject.prefab.sizeY / 64) % 2 == 1 ? 0.5 : 0);
+            game.activeObject.z = Math.floor(worldPosition.z);
+
+            if (e.type === "mousedown" && e.button === 0) {
+                consumed = true;
+                game.activeObject = null;
+            } else if (e.type === "mousedown" && e.button === 2) {
+                consumed = true;
+                game.activeObject.alive = false;
+                game.activeObject = null;
+            }
+        }
+    } else if (e instanceof KeyboardEvent) {
+        if (game.activeObject === null) {
+            if (e.type === "keydown" && e.key === "1") {
+                consumed = true;
+                loadBuilding("assets/Prefabs/Buildings/Castle.json");
+            } else if (e.type === "keydown" && e.key === "2") {
+                consumed = true;
+                loadBuilding("assets/Prefabs/Buildings/Barracks.json");
+            } else if (e.type === "keydown" && e.key === "3") {
+                consumed = true;
+                loadBuilding("assets/Prefabs/Buildings/Archery.json");
+            } else if (e.type === "keydown" && e.key === "4") {
+                consumed = true;
+                loadBuilding("assets/Prefabs/Buildings/House.json");
             }
         }
     }
@@ -524,7 +563,7 @@ function onRender() {
     ctx.drawImage(game.resources.meat.texture, 32, 96);
     ctx.drawImage(game.resources.wood.texture, 32, 160);
     ctx.drawImage(game.cursor.pointerTexture, 22, 17, 22, 30, game.cursor.screenX, game.cursor.screenY, 22, 30);
-    if (game.activeObject !== null) {
+    if (game.activeObject !== null && game.activeObject.prefab.type === "Unit") {
         ctx.drawImage(game.activeObject.prefab.avatar, -16, canvas.height + 16 - game.activeObject.prefab.avatar.height);
     }
 }

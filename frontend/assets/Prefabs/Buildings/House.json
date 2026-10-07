@@ -1,0 +1,18 @@
+{
+    "type": "Building",
+    "buildingType": "House",
+    "sizeX": 128,
+    "sizeY": 128,
+    "selectionX": -64,
+    "selectionY": -96,
+    "selectionW": 128,
+    "selectionH": 160,
+    "animations": {
+        "Idle": {
+            "offsetX": 64,
+            "offsetY": 112,
+            "texture": "assets/Images/Buildings/Blue Buildings/House1.png",
+            "frameCount": 1
+        }
+    }
+}
