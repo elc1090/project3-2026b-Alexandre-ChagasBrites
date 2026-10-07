@@ -1,6 +1,7 @@
 {
     "type": "Building",
     "buildingType": "Barracks",
+    "health": 8,
     "sizeX": 192,
     "sizeY": 128,
     "selectionX": -96,

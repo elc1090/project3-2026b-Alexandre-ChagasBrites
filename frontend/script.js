@@ -185,6 +185,7 @@ async function loadPrefab(options, path) {
 
 async function loadBuilding(path) {
     const object = await loadPrefab({}, path);
+    object.health = 0;
     game.activeObject = object;
 }
 
@@ -260,14 +261,13 @@ function getWorldPosition(x, y) {
 }
 
 function setObjectAnimation(object, animation) {
-    if (object.animation === animation) {
-        return;
+    if (object.animation !== animation) {
+        object.frame = 0;
+        object.frameTimer = 0;
+        object.animation = animation;
     }
     object.offsetX = object.prefab.animations[animation].offsetX;
     object.offsetY = object.prefab.animations[animation].offsetY;
-    object.frame = 0;
-    object.frameTimer = 0;
-    object.animation = animation;
     object.texture = object.prefab.animations[animation].texture;
     object.textureRegion.x = 0;
     object.textureRegion.y = 0;
@@ -275,8 +275,14 @@ function setObjectAnimation(object, animation) {
     object.textureRegion.h = object.texture.height;
 }
 
+async function setObjectPrefab(object, path) {
+    const prefab = await loadAsset("Prefab", path);
+    object.prefab = prefab;
+    setObjectAnimation(object, object.animation);
+}
+
 function canInteract(object, targetObject) {
-    return (object.prefab.unitType === "Pawn" && targetObject.prefab.type === "Resource" && targetObject.health > 0) ||
+    return (object.prefab.unitType === "Pawn" && ((targetObject.prefab.type === "Resource" && targetObject.health > 0) || (targetObject.prefab.type === "Building" && targetObject.health < targetObject.prefab.health))) ||
         ((object.prefab.unitType === "Warrior" || object.prefab.unitType === "Archer") && targetObject.prefab.type === "Unit" && targetObject.health > 0);
 }
 
@@ -292,7 +298,7 @@ function onStep(deltatime) {
         if (object.prefab.type === "Unit") {
             if (object.targetObject !== null && object.prefab.unitType !== "Archer") {
                 const offsetX = object.targetObject.x - object.x;
-                object.targetX = object.targetObject.x - Math.sign(offsetX);
+                object.targetX = object.targetObject.x - Math.sign(offsetX) * (object.prefab.sizeX + object.targetObject.prefab.sizeX) / 64 * 0.5;
                 if (Math.sign(offsetX) === 0.0) {
                     object.targetX += object.flip ? -1 : 1;
                 }
@@ -307,27 +313,37 @@ function onStep(deltatime) {
                 if (object.actionTimer > 0.0) {
                     object.actionTimer -= Math.min(object.actionTimer, deltatime);
                 } else if (object.animation === "Shoot") {
-                    object.actionTimer = object.prefab.animations[object.animation].frameCount * 0.1;
+                    object.actionTimer += object.prefab.animations[object.animation].frameCount * 0.1;
                     const time = (8 + Math.sqrt(8 * 8 + 2 * 10 * (object.z - object.targetObject.z))) / 10.0;
                     const velocityX = (object.targetObject.x - object.x) / time;
                     const velocityY = (object.targetObject.y - object.y) / time;
                     loadPrefab({ x: object.x, y: object.y, z: object.z + 0.5, velocityX: velocityX, velocityY: velocityY, velocityZ: 8 }, "assets/Prefabs/Units/Arrow.json");
                 } else if (object.x === object.targetX && object.y === object.targetY) {
-                    object.targetObject.health--;
-                    if (object.targetObject.health > 0) {
-                        object.actionTimer = object.prefab.animations[object.animation].frameCount * 0.1;
-                    } else {
-                        if (object.targetObject.prefab.resourceType === "Sheep") {
-                            game.resources.meat.count += 5;
-                            object.targetObject.alive = false;
-                        } else if (object.targetObject.prefab.resourceType === "Tree") {
-                            game.resources.wood.count += 5;
-                            setObjectAnimation(object.targetObject, "Stump");
-                        } else if (object.targetObject.prefab.type === "Unit") {
-                            object.targetObject.alive = false;
+                    if (object.targetObject.prefab.type === "Building") {
+                        object.targetObject.health++;
+                        if (object.targetObject.health < object.targetObject.prefab.health) {
+                            object.actionTimer += object.prefab.animations[object.animation].frameCount * 0.1;
+                        } else {
+                            loadPrefab({ x: object.targetObject.x, y: object.targetObject.y, z: object.targetObject.z }, "assets/Prefabs/Particles/Dust2.json");
+                            object.targetObject = null;
                         }
-                        loadPrefab({ x: object.targetObject.x, y: object.targetObject.y, z: object.targetObject.z }, "assets/Prefabs/Particles/Dust1.json");
-                        object.targetObject = null;
+                    } else {
+                        object.targetObject.health--;
+                        if (object.targetObject.health > 0) {
+                            object.actionTimer += object.prefab.animations[object.animation].frameCount * 0.1;
+                        } else {
+                            if (object.targetObject.prefab.resourceType === "Sheep") {
+                                game.resources.meat.count += 5;
+                                object.targetObject.alive = false;
+                            } else if (object.targetObject.prefab.resourceType === "Tree") {
+                                game.resources.wood.count += 5;
+                                setObjectAnimation(object.targetObject, "Stump");
+                            } else if (object.targetObject.prefab.type === "Unit") {
+                                object.targetObject.alive = false;
+                            }
+                            loadPrefab({ x: object.targetObject.x, y: object.targetObject.y, z: object.targetObject.z }, "assets/Prefabs/Particles/Dust1.json");
+                            object.targetObject = null;
+                        }
                     }
                 }
             }
@@ -487,6 +503,14 @@ function onEvent(e) {
                     game.activeObject.targetX = game.cursor.worldX;
                     game.activeObject.targetY = game.cursor.worldY;
                     setObjectAnimation(game.activeObject, "Run");
+                } else if (game.activeObject.prefab.unitType === "Pawn") {
+                    if (game.activeObject.targetObject.prefab.resourceType === "Tree") {
+                        setObjectPrefab(game.activeObject, "assets/Prefabs/Units/Pawn Axe.json");
+                    } else if (game.activeObject.targetObject.prefab.resourceType === "Sheep") {
+                        setObjectPrefab(game.activeObject, "assets/Prefabs/Units/Pawn Knife.json");
+                    } else if (game.activeObject.targetObject.prefab.type === "Building") {
+                        setObjectPrefab(game.activeObject, "assets/Prefabs/Units/Pawn Hammer.json");
+                    }
                 }
             }
         } else if (game.activeObject.prefab.type === "Building") {
@@ -494,17 +518,19 @@ function onEvent(e) {
                 return object.prefab.type === "Unit" || object.prefab.type === "Building";
             });
 
-            game.activeObject.x = Math.floor(worldPosition.x) + ((game.activeObject.prefab.sizeX / 64) % 2 == 1 ? 0.5 : 0);
-            game.activeObject.y = Math.floor(worldPosition.y) + ((game.activeObject.prefab.sizeY / 64) % 2 == 1 ? 0.5 : 0);
-            game.activeObject.z = Math.floor(worldPosition.z);
-
-            if (e.type === "mousedown" && e.button === 0) {
-                consumed = true;
-                game.activeObject = null;
-            } else if (e.type === "mousedown" && e.button === 2) {
-                consumed = true;
-                game.activeObject.alive = false;
-                game.activeObject = null;
+            if (game.activeObject.health === 0) {
+                game.activeObject.x = Math.floor(worldPosition.x + ((game.activeObject.prefab.sizeX / 64) % 2 == 0 ? 0.5 : 0)) + ((game.activeObject.prefab.sizeX / 64) % 2 == 1 ? 0.5 : 0);
+                game.activeObject.y = Math.floor(worldPosition.y + ((game.activeObject.prefab.sizeY / 64) % 2 == 0 ? 0.5 : 0)) + ((game.activeObject.prefab.sizeY / 64) % 2 == 1 ? 0.5 : 0);
+                game.activeObject.z = Math.floor(worldPosition.z);
+                
+                if (e.type === "mousedown" && e.button === 0) {
+                    consumed = true;
+                    game.activeObject = null;
+                } else if (e.type === "mousedown" && e.button === 2) {
+                    consumed = true;
+                    game.activeObject.alive = false;
+                    game.activeObject = null;
+                }
             }
         }
     } else if (e instanceof KeyboardEvent) {
@@ -682,6 +708,9 @@ function drawObject(object) {
     ctx.rotate(object.rotation);
     ctx.scale(object.flip ? -1.0 : 1.0, 1.0);
     ctx.translate(-object.offsetX / 64, -object.offsetY / 64);
+    if (object.prefab.type === "Building") {
+        ctx.globalAlpha = (object.health / object.prefab.health) * 0.5 + 0.5;
+    }
     ctx.drawImage(object.texture, object.textureRegion.x, object.textureRegion.y, object.textureRegion.w, object.textureRegion.h, 0, 0, object.textureRegion.w / 64, object.textureRegion.h / 64);
     if (game.hotObject == object) {
         ctx.globalCompositeOperation = "screen";

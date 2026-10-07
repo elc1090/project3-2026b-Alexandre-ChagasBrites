@@ -1,6 +1,7 @@
 {
     "type": "Building",
     "buildingType": "Castle",
+    "health": 8,
     "sizeX": 320,
     "sizeY": 128,
     "selectionX": -160,

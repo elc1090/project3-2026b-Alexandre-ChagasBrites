@@ -13,14 +13,21 @@
         "Idle": {
             "offsetX": 96,
             "offsetY": 127,
-            "texture": "assets/Images/Units/Blue Units/Pawn/Pawn_Idle.png",
+            "texture": "assets/Images/Units/Blue Units/Pawn/Pawn_Idle Knife.png",
             "frameCount": 8
         },
         "Run": {
             "offsetX": 96,
             "offsetY": 127,
-            "texture": "assets/Images/Units/Blue Units/Pawn/Pawn_Run.png",
+            "texture": "assets/Images/Units/Blue Units/Pawn/Pawn_Run Knife.png",
             "frameCount": 6
+        },
+        "Interact": {
+            "offsetX": 96,
+            "offsetY": 127,
+            "texture": "assets/Images/Units/Blue Units/Pawn/Pawn_Interact Knife.png",
+            "frameCount": 4,
+            "actionFrame": 2
         }
     }
 }
