@@ -4,10 +4,32 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tiny Swords</title>
-    <link rel="stylesheet" href="style.css">
-    <script type="module" src="script.js"></script>
+    <link rel="stylesheet" href="index.css">
+    <script type="module" src="index.js"></script>
   </head>
   <body>
-    <canvas id="canvas" oncontextmenu="return false;"></canvas>
+    <header>
+      <h1 data-section="playSection">Play</h1>
+      <h1 data-section="signinSection">Sign In</h1>
+      <h1 data-section="signupSection">Sign Up</h1>
+    </header>
+    <main>
+      <section id="playSection">
+        <button type="button" id="playButton">New Game</button>
+        <button type="button">Replay Game</button>
+      </section>
+      <section id="signinSection">
+        <input type="text" placeholder="Username">
+        <input type="password" placeholder="Password">
+        <button type="button">Sign In</button>
+      </section>
+      <section id="signupSection">
+        <input type="text" placeholder="Name">
+        <input type="text" placeholder="Email">
+        <input type="password" placeholder="Password">
+        <input type="password" placeholder="Confirm Password">
+        <button type="button">Sign Up</button>
+      </section>
+    </main>
   </body>
 </html>
