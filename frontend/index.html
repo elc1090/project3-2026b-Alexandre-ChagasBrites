@@ -11,26 +11,26 @@
   <body>
     <header class="ribbon-big">
       <h1 class="cursor-pointer" data-section="playSection">Play</h1>
-      <h1 class="cursor-pointer" data-section="signinSection">Sign In</h1>
-      <h1 class="cursor-pointer" data-section="signupSection">Sign Up</h1>
+      <h1 class="cursor-pointer" data-section="signinForm">Sign In</h1>
+      <h1 class="cursor-pointer" data-section="signupForm">Sign Up</h1>
     </header>
     <main class="banner">
       <section id="playSection">
         <button class="button-big" type="button" id="playButton">New Game</button>
         <button class="button-big" type="button">Replay Game</button>
       </section>
-      <section id="signinSection">
-        <input class="banner-slot" type="text" placeholder="Username">
-        <input class="banner-slot" type="password" placeholder="Password">
-        <button class="button-big" type="button">Sign In</button>
-      </section>
-      <section id="signupSection">
-        <input class="banner-slot" type="text" placeholder="Name">
-        <input class="banner-slot" type="text" placeholder="Email">
-        <input class="banner-slot" type="password" placeholder="Password">
-        <input class="banner-slot" type="password" placeholder="Confirm Password">
-        <button class="button-big" type="button">Sign Up</button>
-      </section>
+      <form id="signinForm">
+        <input class="banner-slot" type="text" name="username" required placeholder="Username">
+        <input class="banner-slot" type="password" name="password" required placeholder="Password">
+        <button class="button-big" type="submit" id="signinButton">Sign In</button>
+      </form>
+      <form id="signupForm">
+        <input class="banner-slot" type="text" name="username" required placeholder="Username">
+        <input class="banner-slot" type="email" name="email" required placeholder="Email">
+        <input class="banner-slot" type="password" name="password" required placeholder="Password">
+        <input class="banner-slot" type="password" name="confirmPassword" required placeholder="Confirm Password">
+        <button class="button-big" type="submit" id="signupButton">Sign Up</button>
+      </form>
     </main>
   </body>
 </html>
