@@ -1,0 +1,112 @@
+@font-face {
+    font-family: "PatrickHand";
+    src: url("assets/PatrickHand-Regular.ttf")
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: content-box;
+    font-family: "PatrickHand";
+    font-size: 32px;
+    cursor: url("assets/Images/UI Elements/Cursors/Cursor_01.png") 22 17, auto;
+}
+
+button {
+    appearance: none;
+    background: none;
+    border: 0;
+}
+
+button:hover {
+    cursor: url("assets/Images/UI Elements/Cursors/Cursor_02.png") 22 17, auto;
+}
+
+input {
+    appearance: none;
+    background: none;
+}
+
+input:focus-visible {
+    outline: none;
+}
+
+.cursor-pointer {
+    cursor: url("assets/Images/UI Elements/Cursors/Cursor_02.png") 22 17, auto;
+}
+
+.cursor-not-allowed {
+    cursor: url("assets/Images/UI Elements/Cursors/Cursor_03.png") 32 32, auto;
+}
+
+.banner {
+    margin-top: -48px;
+    border-width: 72px;
+    border-style: solid;
+    border-color: transparent;
+    border-image-outset: 0;
+    border-image-repeat: round;
+    border-image-slice: 128 fill;
+    border-image-source: url("assets/Images/UI Elements/Banners/Banner.png");
+    border-image-width: 128px;
+}
+
+.banner-slot {
+    color: white;
+    border-width: 12px  16px 16px;
+    border-style: solid;
+    border-color: transparent;
+    border-image-outset: 0;
+    border-image-repeat: round;
+    border-image-slice: 64 fill;
+    border-image-source: url("assets/Images/UI Elements/Banners/Banner_Slots.png");
+    border-image-width: 64px;
+}
+
+.button-big {
+    color: white;
+    margin: -8px -16px;
+    border-width: 24px  48px 32px;
+    border-style: solid;
+    border-color: transparent;
+    border-image-outset: 0;
+    border-image-repeat: round;
+    border-image-slice: 64 fill;
+    border-image-source: url("assets/Images/UI Elements/Buttons/BigBlueButton_Regular.png");
+    border-image-width: 64px;
+}
+
+.button-big:active {
+    border-image-source: url("assets/Images/UI Elements/Buttons/BigBlueButton_Pressed.png");
+}
+
+.ribbon-big {
+    color: white;
+    border-width: 12px 80px 16px;
+    border-style: solid;
+    border-color: transparent;
+    border-image-outset: 0;
+    border-image-repeat: round;
+    border-image-slice: 64 128 fill;
+    border-image-source: url("assets/Images/UI Elements/Ribbons/BigRibbon_Blue.png");
+    border-image-width: 64px 128px;
+}
+
+.wood-table {
+    border-width: 32px;
+    border-style: solid;
+    border-color: transparent;
+    border-image-outset: 0;
+    border-image-repeat: round;
+    border-image-slice: 128 fill;
+    border-image-source: url("assets/Images/UI Elements/Wood Table/WoodTable.png");
+    border-image-width: 64px;
+}
+
+.wood-table-slot {
+    border-image-outset: 0;
+    border-image-repeat: round;
+    border-image-slice: 64 fill;
+    border-image-source: url("assets/Images/UI Elements/Wood Table/WoodTable_Slots.png");
+    border-image-width: 32px;
+}

@@ -4,10 +4,43 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tiny Swords</title>
+    <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="game.css">
     <script type="module" src="game.js"></script>
   </head>
   <body>
-    <canvas id="canvas" oncontextmenu="return false;"></canvas>
+    <canvas id="canvas" oncontextmenu="return false;">
+    </canvas>
+    <section class="wood-table" id="resourceSection">
+      <div style="display: flex; flex-direction: row;">
+        <img src="assets/Images/UI Elements/Icons/Icon_03.png" style="height: 40px;">
+        <p id="goldField" class="wood-table-slot" style="padding: 0 16px;">000</p>
+      </div>
+      <div style="display: flex; flex-direction: row;">
+        <img src="assets/Images/UI Elements/Icons/Icon_04.png" style="height: 40px;">
+        <p id="meatField" class="wood-table-slot" style="padding: 0 16px;">000</p>
+      </div>
+      <div style="display: flex; flex-direction: row;">
+        <img src="assets/Images/UI Elements/Icons/Icon_02.png" style="height: 40px;">
+        <p id="woodField" class="wood-table-slot" style="padding: 0 16px;">000</p>
+      </div>
+    </section>
+    <section class="wood-table" id="unitSection">
+      <img id="unitImage" style="width: 128px; height: 128px;">
+    </section>
+    <section class="wood-table" id="buildingSection">
+      <button data-building="Castle" class="wood-table-slot" type="button" style="width: 160px; height: 64px;">
+        <div style="position: fixed; width: 160px; height: 128px; bottom: 32px; background-size: 160px 128px; background-image: url('assets/Images/Buildings/Blue Buildings/Castle.png');"></div>
+      </button>
+      <button data-building="Barracks" class="wood-table-slot" type="button" style="width: 96px; height: 64px;">
+        <div style="position: fixed; width: 96px; height: 128px; bottom: 32px; background-size: 96px 128px; background-image: url('assets/Images/Buildings/Blue Buildings/Barracks.png');"></div>
+      </button>
+      <button data-building="Archery" class="wood-table-slot" type="button" style="width: 96px; height: 64px;">
+        <div style="position: fixed; width: 96px; height: 128px; bottom: 32px; background-size: 96px 128px; background-image: url('assets/Images/Buildings/Blue Buildings/Archery.png');"></div>
+      </button>
+      <button data-building="House" class="wood-table-slot" type="button" style="width: 64px; height: 64px;">
+        <div style="position: fixed; width: 64px; height: 96px; bottom: 32px; background-size: 64px 96px; background-image: url('assets/Images/Buildings/Blue Buildings/House1.png');"></div>
+      </button>
+    </section>
   </body>
 </html>

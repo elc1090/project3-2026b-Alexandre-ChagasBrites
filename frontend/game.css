@@ -4,8 +4,44 @@ body {
 }
 
 canvas {
-    display: block;
+    display: flex;
     width: 100%;
     height: 100%;
-    cursor: none;
+    anchor-name: --canvas;
+}
+
+p {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+#resourceSection {
+    position: fixed;
+    position-anchor: --canvas;
+    position-area: top left;
+    display: flex;
+    flex-direction: column;
+    z-index: 1;
+    color: white;
+    padding: 8px;
+}
+
+#unitSection {
+    position: fixed;
+    position-anchor: --canvas;
+    position-area: bottom left;
+    display: flex;
+    flex-direction: row;
+    z-index: 1;
+}
+
+#buildingSection {
+    position: fixed;
+    position-anchor: --canvas;
+    position-area: bottom right;
+    display: flex;
+    flex-direction: row;
+    z-index: 1;
+    gap: 8px;
 }

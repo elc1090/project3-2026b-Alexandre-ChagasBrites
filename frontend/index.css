@@ -1,16 +1,3 @@
-@font-face {
-    font-family: "PatrickHand";
-    src: url("assets/PatrickHand-Regular.ttf")
-}
-
-* {
-    padding: 0;
-    margin: 0;
-    box-sizing: content-box;
-    font-family: "PatrickHand";
-    font-size: 32px;
-}
-
 body {
     display: flex;
     flex-direction: column;
@@ -26,67 +13,15 @@ header {
     flex-direction: row;
     z-index: 1;
     gap: 16px;
-    color: white;
-    padding: 12px 80px 16px;
-    border-image-outset: 0;
-    border-image-repeat: round;
-    border-image-slice: 64 128 fill;
-    border-image-source: url("assets/Images/UI Elements/Ribbons/BigRibbon_Blue.png");
-    border-image-width: 64px 128px;
 }
 
 main {
     display: flex;
     flex-direction: column;
-    margin-top: -48px;
-    padding: 72px 72px 72px;
-    min-width: 64px;
-    border-image-outset: 0;
-    border-image-repeat: round;
-    border-image-slice: 128 fill;
-    border-image-source: url("assets/Images/UI Elements/Banners/Banner.png");
-    border-image-width: 128px;
-}
-
-h1 {
-    cursor: pointer;
 }
 
 section {
     display: flex;
     flex-direction: column;
     gap: 8px;
-}
-
-input {
-    appearance: none;
-    background: none;
-    color: white;
-    border-width: 12px  16px 16px;
-    border-image-outset: 0;
-    border-image-repeat: round;
-    border-image-slice: 64 fill;
-    border-image-source: url("assets/Images/UI Elements/Banners/Banner_Slots.png");
-    border-image-width: 64px;
-}
-
-input:focus-visible {
-    outline: none;
-}
-
-button {
-    appearance: none;
-    background: none;
-    color: white;
-    margin: -8px -16px;
-    border-width: 24px  48px 32px;
-    border-image-outset: 0;
-    border-image-repeat: round;
-    border-image-slice: 64 fill;
-    border-image-source: url("assets/Images/UI Elements/Buttons/BigBlueButton_Regular.png");
-    border-image-width: 64px;
-}
-
-button:active {
-    border-image-source: url("assets/Images/UI Elements/Buttons/BigBlueButton_Pressed.png");
 }

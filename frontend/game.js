@@ -1,6 +1,15 @@
 const canvas = document.querySelector("canvas");
 const ctx = canvas.getContext("2d");
 
+const resourceSection = document.getElementById("resourceSection");
+const unitSection = document.getElementById("unitSection");
+const buildingSection = document.getElementById("buildingSection");
+
+const goldField = document.getElementById("goldField");
+const meatField = document.getElementById("meatField");
+const woodField = document.getElementById("woodField");
+const unitImage = document.getElementById("unitImage");
+
 const game = {
     timestamp: undefined,
     accum: 0,
@@ -9,18 +18,9 @@ const game = {
     assets: {},
 
     resources: {
-        gold: {
-            count: 0,
-            texture: null
-        },
-        meat: {
-            count: 0,
-            texture: null
-        },
-        wood: {
-            count: 0,
-            texture: null
-        }
+        gold: 0,
+        meat: 0,
+        wood: 0
     },
     tilemap: {
         sizeX: 0,
@@ -48,9 +48,6 @@ const game = {
         screenY: 0,
         worldX: 0,
         worldY: 0,
-        state: 0,
-        textures: [],
-        textureOffsets: [],
         targetTexture: null
     },
     drawOrder: [],
@@ -134,19 +131,8 @@ async function loadAsset(type, path) {
 }
 
 async function loadResources() {
-    loadAsset("Font", { family: "Patrick Hand", source: "url('assets/PatrickHand-Regular.ttf')" });
     loadAsset("Prefab", "assets/Prefabs/Particles/Dust1.json");
-    game.resources.gold.texture = await loadAsset("Image", "assets/Images/UI Elements/Icons/Icon_03.png");
-    game.resources.meat.texture = await loadAsset("Image", "assets/Images/UI Elements/Icons/Icon_04.png");
-    game.resources.wood.texture = await loadAsset("Image", "assets/Images/UI Elements/Icons/Icon_02.png");
-    game.cursor.textures = [
-        await loadAsset("Image", "assets/Images/UI Elements/Cursors/Cursor_01.png"),
-        await loadAsset("Image", "assets/Images/UI Elements/Cursors/Cursor_03.png")
-    ];
-    game.cursor.textureOffsets = [
-        { x: 22, y: 17 },
-        { x: 32, y: 32 },
-    ];
+    loadAsset("Prefab", "assets/Prefabs/Particles/Dust2.json");
     game.cursor.targetTexture = await loadAsset("Image", "assets/Images/UI Elements/Cursors/Cursor_04.png");
 }
 
@@ -212,7 +198,7 @@ async function loadPrefab(options, path) {
 async function loadBuilding(path) {
     const object = await loadPrefab({}, path);
     object.health = 0;
-    game.activeObject = object;
+    setActiveObject(object);
 }
 
 function getTilemapHeight(x, y) {
@@ -284,6 +270,23 @@ function getWorldPosition(x, y) {
         }
     }
     return position;
+}
+
+function setActiveObject(object) {
+    if (game.activeObject !== null && game.activeObject.prefab.type === "Unit") {
+        unitSection.style.display = "none";
+        if (game.activeObject.prefab.unitType === "Pawn") {
+            buildingSection.style.display = "none";
+        }
+    }
+    game.activeObject = object;
+    if (object !== null && object.prefab.type === "Unit") {
+        unitSection.style.display = "flex";
+        unitImage.src = object.prefab.avatar.src;
+        if (object.prefab.unitType === "Pawn") {
+            buildingSection.style.display = "flex";
+        }
+    }
 }
 
 function setObjectAnimation(object, animation) {
@@ -388,10 +391,12 @@ function onStep(deltatime) {
                         object.actionTimer += object.prefab.animations[object.animation].frameCount * 0.1;
                     } else {
                         if (object.targetObject.prefab.resourceType === "Sheep") {
-                            game.resources.meat.count += 5;
+                            game.resources.meat += 5;
+                            meatField.textContent = `${game.resources.meat}`.padStart(3, "0");
                             object.targetObject.alive = false;
                         } else if (object.targetObject.prefab.resourceType === "Tree") {
-                            game.resources.wood.count += 5;
+                            game.resources.wood += 5;
+                            woodField.textContent = `${game.resources.wood}`.padStart(3, "0");
                             setObjectAnimation(object.targetObject, "Stump");
                         } else if (object.targetObject.prefab.type === "Unit") {
                             object.targetObject.alive = false;
@@ -543,7 +548,7 @@ function onEvent(e) {
             });
             if (e.type === "mousedown" && e.button === 0) {
                 consumed = true;
-                game.activeObject = game.hotObject;
+                setActiveObject(game.hotObject);
             }
         } else if (game.activeObject.prefab.type === "Unit") {
             game.hotObject = getScreenObject(game.cursor.screenX, game.cursor.screenY, (object) => {
@@ -551,9 +556,9 @@ function onEvent(e) {
             });
             if (e.type === "mousedown" && e.button === 0) {
                 consumed = true;
-                game.activeObject = getScreenObject(game.cursor.screenX, game.cursor.screenY, (object) => {
+                setActiveObject(getScreenObject(game.cursor.screenX, game.cursor.screenY, (object) => {
                     return object.prefab.type === "Unit" || object.prefab.type === "Building";
-                });
+                }));
             } else if (e.type === "mousedown" && e.button === 2) {
                 consumed = true;
                 game.activeObject.targetObject = getScreenObject(game.cursor.screenX, game.cursor.screenY, (object) => {
@@ -582,37 +587,27 @@ function onEvent(e) {
                 game.activeObject.x = Math.floor(worldPosition.x + ((game.activeObject.prefab.sizeX / 64) % 2 == 0 ? 0.5 : 0)) + ((game.activeObject.prefab.sizeX / 64) % 2 == 1 ? 0.5 : 0);
                 game.activeObject.y = Math.floor(worldPosition.y + ((game.activeObject.prefab.sizeY / 64) % 2 == 0 ? 0.5 : 0)) + ((game.activeObject.prefab.sizeY / 64) % 2 == 1 ? 0.5 : 0);
                 game.activeObject.z = Math.floor(worldPosition.z);
-                game.cursor.state = isSafeRegion(game.activeObject) ? 0 : 1;
+
+                const isSafe = isSafeRegion(game.activeObject);
+                if (isSafe) {
+                    canvas.classList.remove("cursor-not-allowed");
+                } else {
+                    canvas.classList.add("cursor-not-allowed");
+                }
                 
-                if (e.type === "mousedown" && e.button === 0 && game.cursor.state == 0) {
+                if (e.type === "mousedown" && e.button === 0 && isSafe) {
                     consumed = true;
-                    game.activeObject = null;
-                    game.cursor.state = 0;
+                    setActiveObject(null);
+                    canvas.classList.remove("cursor-not-allowed");
                 } else if (e.type === "mousedown" && e.button === 2) {
                     consumed = true;
                     game.activeObject.alive = false;
-                    game.activeObject = null;
-                    game.cursor.state = 0;
+                    setActiveObject(null);
+                    canvas.classList.remove("cursor-not-allowed");
                 }
             } else if (e.type === "mousedown" && e.button === 0) {
                 consumed = true;
-                game.activeObject = game.hotObject;
-            }
-        }
-    } else if (e instanceof KeyboardEvent) {
-        if (game.activeObject === null) {
-            if (e.type === "keydown" && e.key === "1") {
-                consumed = true;
-                loadBuilding("assets/Prefabs/Buildings/Castle.json");
-            } else if (e.type === "keydown" && e.key === "2") {
-                consumed = true;
-                loadBuilding("assets/Prefabs/Buildings/Barracks.json");
-            } else if (e.type === "keydown" && e.key === "3") {
-                consumed = true;
-                loadBuilding("assets/Prefabs/Buildings/Archery.json");
-            } else if (e.type === "keydown" && e.key === "4") {
-                consumed = true;
-                loadBuilding("assets/Prefabs/Buildings/House.json");
+                setActiveObject(game.hotObject);
             }
         }
     }
@@ -644,24 +639,6 @@ function onRender() {
     ctx.stroke();
 
     drawWorld();
-
-    ctx.resetTransform();
-    ctx.fillStyle = "white";
-    ctx.font = "64px Patrick Hand";
-    ctx.fillText(`${game.resources.gold.count}`.padStart(3, "0"), 112, 80);
-    ctx.fillText(`${game.resources.meat.count}`.padStart(3, "0"), 112, 144);
-    ctx.fillText(`${game.resources.wood.count}`.padStart(3, "0"), 112, 208);
-    ctx.drawImage(game.resources.gold.texture, 32, 32);
-    ctx.drawImage(game.resources.meat.texture, 32, 96);
-    ctx.drawImage(game.resources.wood.texture, 32, 160);
-    if (game.cursor.state < game.cursor.textures.length) {
-        const texture = game.cursor.textures[game.cursor.state];
-        const offset = game.cursor.textureOffsets[game.cursor.state];
-        ctx.drawImage(texture, game.cursor.screenX - offset.x, game.cursor.screenY - offset.y);
-    }
-    if (game.activeObject !== null && game.activeObject.prefab.type === "Unit") {
-        ctx.drawImage(game.activeObject.prefab.avatar, -16, canvas.height + 16 - game.activeObject.prefab.avatar.height);
-    }
 }
 
 function drawWorld() {
@@ -822,9 +799,19 @@ function gameloop(timestamp) {
     requestAnimationFrame(gameloop);
 }
 
-window.addEventListener("mousemove", (e) => { return handleEvent(e); });
-window.addEventListener("mousedown", (e) => { return handleEvent(e); });
-window.addEventListener("mouseup", (e) => { return handleEvent(e); });
+unitSection.style.display = "none";
+buildingSection.style.display = "none";
+
+for (const buildingButton of buildingSection.children) {
+    buildingButton.children[0].style.backgroundImage = buildingButton.children[0].style.backgroundImage.replace("Blue", game.teamColor);
+    buildingButton.addEventListener("click", () => {
+        loadBuilding(`assets/Prefabs/Buildings/${buildingButton.dataset.building}.json`);
+    });
+}
+
+canvas.addEventListener("mousemove", (e) => { return handleEvent(e); });
+canvas.addEventListener("mousedown", (e) => { return handleEvent(e); });
+canvas.addEventListener("mouseup", (e) => { return handleEvent(e); });
 window.addEventListener("keydown", (e) => { game.input[e.key] = true; return handleEvent(e); });
 window.addEventListener("keyup", (e) => { game.input[e.key] = false; return handleEvent(e); });
 window.addEventListener("blur", (e) => { game.input = {}; });
