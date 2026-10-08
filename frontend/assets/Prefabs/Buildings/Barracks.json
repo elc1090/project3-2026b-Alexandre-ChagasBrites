@@ -1,6 +1,9 @@
 {
     "type": "Building",
     "buildingType": "Barracks",
+    "buildingCost": {
+        "wood": 15
+    },
     "health": 8,
     "sizeX": 192,
     "sizeY": 128,

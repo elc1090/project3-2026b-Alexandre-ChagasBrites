@@ -1,6 +1,9 @@
 {
     "type": "Resource",
     "resourceType": "Sheep",
+    "resourceGain": {
+        "meat": 5
+    },
     "health": 4,
     "sizeX": 64,
     "sizeY": 32,

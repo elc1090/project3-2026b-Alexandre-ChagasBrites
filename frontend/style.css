@@ -39,6 +39,14 @@ input:focus-visible {
     cursor: url("assets/Images/UI Elements/Cursors/Cursor_03.png") 32 32, auto;
 }
 
+.highlight:hover:not(.disabled) {
+    opacity: 0.5;
+}
+
+.disabled {
+    filter: grayscale(1)
+}
+
 .banner {
     margin-top: -48px;
     border-width: 72px;

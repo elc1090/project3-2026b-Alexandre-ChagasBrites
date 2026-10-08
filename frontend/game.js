@@ -4,10 +4,6 @@ const ctx = canvas.getContext("2d");
 const resourceSection = document.getElementById("resourceSection");
 const unitSection = document.getElementById("unitSection");
 const buildingSection = document.getElementById("buildingSection");
-
-const goldField = document.getElementById("goldField");
-const meatField = document.getElementById("meatField");
-const woodField = document.getElementById("woodField");
 const unitImage = document.getElementById("unitImage");
 
 const game = {
@@ -18,9 +14,18 @@ const game = {
     assets: {},
 
     resources: {
-        gold: 0,
-        meat: 0,
-        wood: 0
+        gold: {
+            value: 0,
+            field: document.getElementById("goldField")
+        },
+        meat: {
+            value: 0,
+            field: document.getElementById("meatField")
+        },
+        wood: {
+            value: 0,
+            field: document.getElementById("woodField")
+        }
     },
     tilemap: {
         sizeX: 0,
@@ -41,6 +46,8 @@ const game = {
     camera: {
         x: 0,
         y: 0,
+        offsetX: 0,
+        offsetY: 0,
         dragging: false
     },
     cursor: {
@@ -198,6 +205,7 @@ async function loadPrefab(options, path) {
 async function loadBuilding(path) {
     const object = await loadPrefab({}, path);
     object.health = 0;
+    updateResources(object.prefab.buildingCost, -1);
     setActiveObject(object);
 }
 
@@ -241,15 +249,15 @@ function getScreenObject(x, y, filter) {
 
 function screenToWorld(x, y) {
     return {
-        x: (x - canvas.width * 0.5) / 64 + game.camera.x,
-        y: (y - canvas.height * 0.5) / 64 + game.camera.y
+        x: (x - game.camera.offsetX) / 64 + game.camera.x,
+        y: (y - game.camera.offsetY) / 64 + game.camera.y
     };   
 }
 
 function worldToScreen(x, y, w, h) {
     return {
-        x: (x - game.camera.x) * 64 + canvas.width * 0.5,
-        y: (y - game.camera.y) * 64 + canvas.height * 0.5,
+        x: (x - game.camera.x) * 64 + game.camera.offsetX,
+        y: (y - game.camera.y) * 64 + game.camera.offsetY,
         w: w * 64,
         h: h * 64
     };   
@@ -270,6 +278,13 @@ function getWorldPosition(x, y) {
         }
     }
     return position;
+}
+
+function updateResources(resources, sign) {
+    for (const [resourceName, resourceValue] of Object.entries(resources)) {
+        game.resources[resourceName].value += resourceValue * sign;
+        game.resources[resourceName].field.textContent = `${game.resources[resourceName].value}`.padStart(3, "0");
+    }
 }
 
 function setActiveObject(object) {
@@ -390,13 +405,10 @@ function onStep(deltatime) {
                     if (object.targetObject.health > 0) {
                         object.actionTimer += object.prefab.animations[object.animation].frameCount * 0.1;
                     } else {
+                        updateResources(object.targetObject.prefab.resourceGain, 1);
                         if (object.targetObject.prefab.resourceType === "Sheep") {
-                            game.resources.meat += 5;
-                            meatField.textContent = `${game.resources.meat}`.padStart(3, "0");
                             object.targetObject.alive = false;
                         } else if (object.targetObject.prefab.resourceType === "Tree") {
-                            game.resources.wood += 5;
-                            woodField.textContent = `${game.resources.wood}`.padStart(3, "0");
                             setObjectAnimation(object.targetObject, "Stump");
                         } else if (object.targetObject.prefab.type === "Unit") {
                             object.targetObject.alive = false;
@@ -621,7 +633,7 @@ function onRender() {
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     ctx.resetTransform();
-    ctx.translate(canvas.width * 0.5, canvas.height * 0.5);
+    ctx.translate(game.camera.offsetX, game.camera.offsetY);
     ctx.scale(64, 64);
     ctx.translate(-game.camera.x, -game.camera.y);
 
@@ -780,6 +792,8 @@ function drawCursor(object) {
 function resizeCanvas() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
+    game.camera.offsetX = Math.floor(canvas.width * 0.5);
+    game.camera.offsetY = Math.floor(canvas.height * 0.5);
 }
 
 function gameloop(timestamp) {

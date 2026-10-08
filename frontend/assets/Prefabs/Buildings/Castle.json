@@ -1,6 +1,9 @@
 {
     "type": "Building",
     "buildingType": "Castle",
+    "buildingCost": {
+        "wood": 20
+    },
     "health": 8,
     "sizeX": 320,
     "sizeY": 128,
