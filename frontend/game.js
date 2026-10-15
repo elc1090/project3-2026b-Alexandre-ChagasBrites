@@ -8,6 +8,7 @@ const unitImage = document.getElementById("unitImage");
 
 const game = {
     timestamp: undefined,
+    time: 0,
     accum: 0,
 
     input: {},
@@ -33,13 +34,17 @@ const game = {
         tilesets: [],
         tiles: []
     },
-    objects: [],
+    objects: {},
     systems: {
         units: [],
         sheeps: [],
         projectiles: [],
         movers: [],
         animators: []
+    },
+    record: {
+        time: 0,
+        entries: []
     },
 
     debug: false,
@@ -198,7 +203,26 @@ async function loadPrefab(options, path) {
     if (object.prefab.type !== "Particle") {
         object.frame = Math.floor(Math.random() * object.prefab.animations[object.animation].frameCount);
     }
-    game.objects.push(object);
+
+    let objId = Math.floor(Math.random() * 999999999) + 1;
+    while (objId in game.objects) { 
+        objId = Math.floor(Math.random() * 999999999) + 1;
+    }
+    game.objects[objId] = object;
+
+    /*if (object.prefab.type === "Unit") {
+        const entry = JSON.stringify({
+            timestamp: game.time,
+            type: "ObjectCreated",
+            objId: objId,
+            data: object
+        }, (key, value) => {
+            return key === "prefab" ? path : value;
+        });
+        game.record.entries.push(entry);
+        console.log(entry);
+    }*/
+
     return object;
 }
 
@@ -218,8 +242,7 @@ function getTilemapHeight(x, y) {
 }
 
 function getWorldObject(x, y, filter) {
-    for (let i = 0; i < game.objects.length; i++) {
-        const object = game.objects[i];
+    for (const object of Object.values(game.objects)) {
         let offsetX = x - (object.x - object.prefab.sizeX / 64 * 0.5);
         let offsetY = y - (object.y - object.prefab.sizeY / 64 * 0.5);
         if (offsetX >= 0.0 && offsetX < object.prefab.sizeX / 64 && offsetY >= 0.0 && offsetY < object.prefab.sizeY / 64 && filter(object)) {
@@ -232,8 +255,7 @@ function getWorldObject(x, y, filter) {
 function getScreenObject(x, y, filter) {
     let selectedObject = null;
     let selectedOffset = undefined;
-    for (let i = 0; i < game.objects.length; i++) {
-        const object = game.objects[i];
+    for (const object of Object.values(game.objects)) {
         let offsetX = x - ((object.x + object.prefab.selectionX / 64 - game.camera.x) * 64 + canvas.width  * 0.5);
         let offsetY = y - ((object.y - object.z + object.prefab.selectionY / 64 - game.camera.y) * 64 + canvas.height * 0.5);
         if (offsetX >= 0.0 && offsetX < object.prefab.selectionW && offsetY >= 0.0 && offsetY < object.prefab.selectionH && filter(object)) {
@@ -348,8 +370,7 @@ function isSafeRegion(object) {
             }
         }
     }
-    for (let i = 0; i < game.objects.length; i++) {
-        const otherObject = game.objects[i];
+    for (const otherObject of Object.values(game.objects)) {
         if (object == otherObject) {
             continue;
         }
@@ -512,7 +533,7 @@ function onStep(deltatime) {
         }
     }   
 
-    game.objects = game.objects.filter((object) => { return object.alive; });
+    game.objects = Object.fromEntries(Object.entries(game.objects).filter(([objId, object]) => { return object.alive; }));
     game.systems.units = game.systems.units.filter((object) => { return object.alive; });
     game.systems.sheeps = game.systems.sheeps.filter((object) => { return object.alive; });
     game.systems.projectiles = game.systems.projectiles.filter((object) => { return object.alive; });
@@ -658,8 +679,7 @@ function drawWorld() {
     for (let i = 0; i < game.drawOrder.length; i++) {
         game.drawOrder[i] = [];
     }
-    for (let i = 0; i < game.objects.length; i++) {
-        const object = game.objects[i];
+    for (const object of Object.values(game.objects)) {
         const rect = worldToScreen(
             object.x - object.offsetX / 64,
             object.y - object.z - object.offsetY / 64,
@@ -799,6 +819,7 @@ function resizeCanvas() {
 function gameloop(timestamp) {
     if (game.timestamp !== undefined) {
         const deltatime = timestamp - game.timestamp;
+        game.time += deltatime;
         onStep(deltatime / 1000.0);
 
         /*game.accum = Math.min(game.accum + deltatime, 100.0);

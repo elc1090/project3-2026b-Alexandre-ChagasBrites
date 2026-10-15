@@ -27,7 +27,7 @@ signinForm.addEventListener("submit", async (e) => {
     e.preventDefault();
 
     try {
-        const response = await fetch("http://localhost:3000/api/signin", {
+        const response = await fetch("http://localhost:8080/api/signin", {
             method: "POST",
             headers: { 
                 "Content-Type": "application/json"
@@ -57,7 +57,7 @@ signupForm.addEventListener("submit", async (e) => {
     e.preventDefault();
 
     try {
-        const response = await fetch("http://localhost:3000/api/signup", {
+        const response = await fetch("http://localhost:8080/api/signup", {
             method: "POST",
             headers: { 
                 "Content-Type": "application/json"

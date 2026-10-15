@@ -1,0 +1,16 @@
+services:
+  mongo:
+    image: mongo:8
+    volumes: ["mongo-data:/data/db"]
+
+  express:
+    build: ./
+    environment:
+      MONGODB_URL: mongodb://mongo:27017
+      ADMIN_PASSWORD: tiny-swords-admin
+      SESSION_SECRET: tiny-swords-secret
+    depends_on: [mongo]
+    ports: ["8080:8080"]
+
+volumes:
+  mongo-data:
