@@ -34,6 +34,7 @@ const game = {
         tilesets: [],
         tiles: []
     },
+    buildings: {},
     objects: {},
     systems: {
         units: [],
@@ -145,7 +146,12 @@ async function loadAsset(type, path) {
 async function loadResources() {
     loadAsset("Prefab", "assets/Prefabs/Particles/Dust1.json");
     loadAsset("Prefab", "assets/Prefabs/Particles/Dust2.json");
+    game.buildings["Castle"] = await loadAsset("Prefab", "assets/Prefabs/Buildings/Castle.json");
+    game.buildings["Barracks"] = await loadAsset("Prefab", "assets/Prefabs/Buildings/Barracks.json");
+    game.buildings["Archery"] = await loadAsset("Prefab", "assets/Prefabs/Buildings/Archery.json");
+    game.buildings["House"] = await loadAsset("Prefab", "assets/Prefabs/Buildings/House.json");
     game.cursor.targetTexture = await loadAsset("Image", "assets/Images/UI Elements/Cursors/Cursor_04.png");
+    updateResources({});
 }
 
 async function loadTilemap(path) {
@@ -302,10 +308,27 @@ function getWorldPosition(x, y) {
     return position;
 }
 
+function canAfford(resources) {
+    for (const [resourceName, resourceValue] of Object.entries(resources)) {
+        if (game.resources[resourceName].value < resourceValue) {
+            return false;
+        }
+    }
+    return true;
+}
+
 function updateResources(resources, sign) {
     for (const [resourceName, resourceValue] of Object.entries(resources)) {
         game.resources[resourceName].value += resourceValue * sign;
         game.resources[resourceName].field.textContent = `${game.resources[resourceName].value}`.padStart(3, "0");
+    }
+
+    for (const buildingButton of buildingSection.children) {
+        if (canAfford(game.buildings[buildingButton.dataset.building].buildingCost)) {
+            buildingButton.children[0].classList.remove("disabled");
+        } else {
+            buildingButton.children[0].classList.add("disabled");
+        }
     }
 }
 
@@ -352,11 +375,11 @@ function canInteract(object, targetObject) {
         ((object.prefab.unitType === "Warrior" || object.prefab.unitType === "Archer") && targetObject.prefab.type === "Unit" && targetObject.health > 0);
 }
 
-function isSafeRegion(object) {
-    const minX = Math.max(0, Math.floor(object.x - object.prefab.sizeX / 64 * 0.5 + 0.5));
-    const minY = Math.max(0, Math.floor(object.y - object.prefab.sizeY / 64 * 0.5 + 0.5));
-    const maxX = Math.min(game.tilemap.sizeX, Math.ceil(object.x + object.prefab.sizeX / 64 * 0.5 - 0.5));
-    const maxY = Math.min(game.tilemap.sizeY, Math.ceil(object.y + object.prefab.sizeY / 64 * 0.5 - 0.5));
+function isSafeRegion(object, offset) {
+    const minX = Math.max(0, Math.floor(object.x - object.prefab.sizeX / 64 * 0.5 + offset));
+    const minY = Math.max(0, Math.floor(object.y - object.prefab.sizeY / 64 * 0.5 + offset));
+    const maxX = Math.min(game.tilemap.sizeX, Math.ceil(object.x + object.prefab.sizeX / 64 * 0.5 - offset));
+    const maxY = Math.min(game.tilemap.sizeY, Math.ceil(object.y + object.prefab.sizeY / 64 * 0.5 - offset));
     let otherTile = undefined;
     for (let y = minY; y < maxY; y++) {
         for (let x = minX; x < maxX; x++) {
@@ -396,7 +419,10 @@ function onStep(deltatime) {
             if (Math.sign(offsetX) === 0.0) {
                 object.targetX += object.flip ? -1 : 1;
             }
-            object.targetY = object.targetObject.y + object.targetObject.prefab.sizeY / 64 * 0.5 - 0.5;
+            object.targetY = object.targetObject.y;
+            if (object.targetObject.prefab.sizeY / 64 > 1.0) {
+                object.targetY += object.targetObject.prefab.sizeY / 64 * 0.5 - 0.5;
+            }
             if (object.animation == "Idle" && (object.x !== object.targetX || object.y !== object.targetY)) {
                 setObjectAnimation(object, "Run");
             }
@@ -452,10 +478,19 @@ function onStep(deltatime) {
                 if (action === 0) {
                     setObjectAnimation(object, object.animation === "Idle" ? "Grass" : "Idle");
                 } else {
-                    object.targetX = object.x + Math.random() * 2.0 - 1.0;
-                    object.targetY = object.y + Math.random() * 2.0 - 1.0;
-                    object.targetX = Math.max(0, Math.min(object.targetX, game.tilemap.sizeX));
-                    object.targetY = Math.max(0, Math.min(object.targetY, game.tilemap.sizeY));
+                    const x = object.x;
+                    const y = object.y;
+                    do {
+                        object.x = x + Math.random() * 2.0 - 1.0;
+                        object.y = y + Math.random() * 2.0 - 1.0;
+                        object.x = Math.max(0, Math.min(object.x, game.tilemap.sizeX));
+                        object.y = Math.max(0, Math.min(object.y, game.tilemap.sizeY));
+                    }
+                    while (!isSafeRegion(object, 0.0));
+                    object.targetX = object.x;
+                    object.targetY = object.y;
+                    object.x = x;
+                    object.y = y;
                     setObjectAnimation(object, "Move");
                 }
                 object.actionTimer = object.animation === "Grass"
@@ -621,7 +656,7 @@ function onEvent(e) {
                 game.activeObject.y = Math.floor(worldPosition.y + ((game.activeObject.prefab.sizeY / 64) % 2 == 0 ? 0.5 : 0)) + ((game.activeObject.prefab.sizeY / 64) % 2 == 1 ? 0.5 : 0);
                 game.activeObject.z = Math.floor(worldPosition.z);
 
-                const isSafe = isSafeRegion(game.activeObject);
+                const isSafe = isSafeRegion(game.activeObject, 0.5);
                 if (isSafe) {
                     canvas.classList.remove("cursor-not-allowed");
                 } else {
@@ -634,6 +669,7 @@ function onEvent(e) {
                     canvas.classList.remove("cursor-not-allowed");
                 } else if (e.type === "mousedown" && e.button === 2) {
                     consumed = true;
+                    updateResources(game.activeObject.prefab.buildingCost, 1);
                     game.activeObject.alive = false;
                     setActiveObject(null);
                     canvas.classList.remove("cursor-not-allowed");
@@ -840,7 +876,9 @@ buildingSection.style.display = "none";
 for (const buildingButton of buildingSection.children) {
     buildingButton.children[0].style.backgroundImage = buildingButton.children[0].style.backgroundImage.replace("Blue", game.teamColor);
     buildingButton.addEventListener("click", () => {
-        loadBuilding(`assets/Prefabs/Buildings/${buildingButton.dataset.building}.json`);
+        if (canAfford(game.buildings[buildingButton.dataset.building].buildingCost)) {
+            loadBuilding(`assets/Prefabs/Buildings/${buildingButton.dataset.building}.json`);
+        }
     });
 }
 
@@ -955,15 +993,15 @@ async function loadLevel() {
     await generateTilemap(48, 24);
 
     //await loadPrefab({ x: 4.5, y: 3, z: 2 }, "assets/Prefabs/Buildings/Castle.json");
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 3; i++) {
         await loadPrefab(getRandomPosition(), "assets/Prefabs/Units/Pawn.json");
     }
-    for (let i = 0; i < 5; i++) {
+    /*for (let i = 0; i < 5; i++) {
         await loadPrefab(getRandomPosition(), "assets/Prefabs/Units/Warrior.json");
     }
     for (let i = 0; i < 5; i++) {
         await loadPrefab(getRandomPosition(), "assets/Prefabs/Units/Archer.json");
-    }
+    }*/
     for (let i = 0; i < 10; i++) {
         await loadPrefab(getRandomPosition(), "assets/Prefabs/Terrain/Resources/Meat/Sheep.json");
     }
