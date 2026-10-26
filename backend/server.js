@@ -34,7 +34,23 @@ app.use(session({
   }
 }));
 
-app.get('/api/users', async (_req, res) => {
+function requireAuth(req, res, next) {
+    if (!req.session.user) {
+        return res.status(401).json({ error: "authentication required" });
+    }
+    next();
+}
+
+function requireRole(role) {
+    return (req, res, next) => {
+        if (req.session.user?.role !== role) {
+            return res.status(403).json({ error: `${role} role required` });
+        }
+        next();
+    };
+}
+
+app.get('/api/users', requireAuth, requireRole("admin"), async (_req, res) => {
     const result = await users.find({}, { username: true, role: true }).toArray();
     res.json(result);
 });
@@ -58,6 +74,7 @@ app.post('/api/signup', async (req, res) => {
     const user = {
         username: (req.body?.username ?? "").trim(),
         role: "user",
+        name: (req.body?.name ?? "").trim(),
         email: (req.body?.email ?? "").trim(),
         passwordHash: bcrypt.hashSync(req.body?.password ?? "", 10)
     };

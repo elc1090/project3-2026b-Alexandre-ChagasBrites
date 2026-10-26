@@ -64,6 +64,7 @@ signupForm.addEventListener("submit", async (e) => {
             },
             body: JSON.stringify({
                 username: signupForm.username.value,
+                name: signupForm.name.value,
                 email: signupForm.email.value,
                 password: signupForm.password.value
             })
