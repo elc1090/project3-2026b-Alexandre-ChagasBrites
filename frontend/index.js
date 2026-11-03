@@ -3,6 +3,8 @@ const main = document.querySelector("main");
 const playButton = document.getElementById("playButton");
 const signinForm = document.getElementById("signinForm");
 const signupForm = document.getElementById("signupForm");
+const userForm = document.getElementById("userForm");
+const signoffButton = document.getElementById("signoffButton");
 
 function selectTab(id) {
     for (const tab of tabs) {
@@ -16,7 +18,30 @@ function selectTab(id) {
 for (const tab of tabs) {
     tab.addEventListener("click", () => { 
         selectTab(tab.dataset.section);
+        if (tab.dataset.section === "userForm") {
+            getUserForm();
+        }
     });
+}
+
+async function getUserForm() {
+    try {
+        const response = await fetch("http://localhost:8080/api/me", { credentials: "include" });
+        if (!response.ok) {
+            const message = await response.text();
+            throw new Error(`${response.status}: ${message}`);
+        }
+        
+        const result = await response.json();
+        console.log(result);
+
+        userForm.reset();
+        userForm.name.value = result.name || "";
+        userForm.email.value = result.email || "";
+
+    } catch (error) {
+        console.log(error);
+    }
 }
 
 playButton.addEventListener("click", () => {
@@ -35,7 +60,8 @@ signinForm.addEventListener("submit", async (e) => {
             body: JSON.stringify({
                 username: signinForm.username.value,
                 password: signinForm.password.value
-            })
+            }),
+            credentials: "include"
         });
 
         if (!response.ok) {
@@ -67,7 +93,8 @@ signupForm.addEventListener("submit", async (e) => {
                 name: signupForm.name.value,
                 email: signupForm.email.value,
                 password: signupForm.password.value
-            })
+            }),
+            credentials: "include"
         });
 
         if (!response.ok) {
@@ -83,6 +110,23 @@ signupForm.addEventListener("submit", async (e) => {
     }
 
     signupForm.reset();
+});
+
+signoffButton.addEventListener("click", async (e) => {
+    try {
+        const response = await fetch("http://localhost:8080/api/signoff", {
+            method: "POST",
+            credentials: "include"
+        });
+
+        if (!response.ok) {
+            const message = await response.text();
+            throw new Error(`${response.status}: ${message}`);
+        }
+
+    } catch (error) {
+        console.log(error);
+    }
 });
 
 window.addEventListener("load", () => {

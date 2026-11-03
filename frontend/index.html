@@ -13,6 +13,7 @@
       <h1 class="cursor-pointer" data-section="playSection">Play</h1>
       <h1 class="cursor-pointer" data-section="signinForm">Sign In</h1>
       <h1 class="cursor-pointer" data-section="signupForm">Sign Up</h1>
+      <h1 class="cursor-pointer" data-section="userForm">User</h1>
     </header>
     <main class="banner">
       <section id="playSection">
@@ -22,14 +23,24 @@
       <form id="signinForm">
         <input class="banner-slot" type="text" name="username" required placeholder="Username">
         <input class="banner-slot" type="password" name="password" required placeholder="Password">
-        <button class="button-big" type="submit" id="signinButton">Sign In</button>
+        <button class="button-big" type="submit">Sign In</button>
       </form>
       <form id="signupForm">
         <input class="banner-slot" type="text" name="username" required placeholder="Username">
         <input class="banner-slot" type="text" name="name" required placeholder="Name">
         <input class="banner-slot" type="email" name="email" required placeholder="Email">
         <input class="banner-slot" type="password" name="password" required placeholder="Password">
-        <button class="button-big" type="submit" id="signupButton">Sign Up</button>
+        <button class="button-big" type="submit">Sign Up</button>
+      </form>
+      <form id="userForm">
+        <input class="banner-slot" type="text" name="name" required placeholder="Name">
+        <input class="banner-slot" type="email" name="email" required placeholder="Email">
+        <input class="banner-slot" type="password" name="password" required placeholder="Password">
+        <div style="display: flex; flex-direction: row; gap: 16px;">
+          <button style="flex-grow: 1;" class="button-big" type="submit">Update</button>
+          <button style="flex-grow: 1;" class="button-big" type="button" id="deleteButton">Delete</button>
+        </div>
+        <button class="button-big" type="button" id="signoffButton">Sign Off</button>
       </form>
     </main>
   </body>
