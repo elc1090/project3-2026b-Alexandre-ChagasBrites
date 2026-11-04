@@ -4,6 +4,7 @@ const playButton = document.getElementById("playButton");
 const signinForm = document.getElementById("signinForm");
 const signupForm = document.getElementById("signupForm");
 const userForm = document.getElementById("userForm");
+const deleteButton = document.getElementById("deleteButton");
 const signoffButton = document.getElementById("signoffButton");
 
 function selectTab(id) {
@@ -25,6 +26,8 @@ for (const tab of tabs) {
 }
 
 async function getUserForm() {
+    userForm.reset();
+
     try {
         const response = await fetch("http://localhost:8080/api/me", { credentials: "include" });
         if (!response.ok) {
@@ -35,7 +38,6 @@ async function getUserForm() {
         const result = await response.json();
         console.log(result);
 
-        userForm.reset();
         userForm.name.value = result.name || "";
         userForm.email.value = result.email || "";
 
@@ -112,6 +114,50 @@ signupForm.addEventListener("submit", async (e) => {
     signupForm.reset();
 });
 
+userForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    try {
+        const response = await fetch("http://localhost:8080/api/me", {
+            method: "PATCH",
+            headers: { 
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                name: userForm.name.value,
+                email: userForm.email.value,
+                password: userForm.password.value
+            }),
+            credentials: "include"
+        });
+
+        if (!response.ok) {
+            const message = await response.text();
+            throw new Error(`${response.status}: ${message}`);
+        }
+
+    } catch (error) {
+        console.log(error);
+    }
+});
+
+deleteButton.addEventListener("click", async (e) => {
+    try {
+        const response = await fetch("http://localhost:8080/api/me", {
+            method: "DELETE",
+            credentials: "include"
+        });
+
+        if (!response.ok) {
+            const message = await response.text();
+            throw new Error(`${response.status}: ${message}`);
+        }
+
+    } catch (error) {
+        console.log(error);
+    }
+});
+
 signoffButton.addEventListener("click", async (e) => {
     try {
         const response = await fetch("http://localhost:8080/api/signoff", {
@@ -123,6 +169,8 @@ signoffButton.addEventListener("click", async (e) => {
             const message = await response.text();
             throw new Error(`${response.status}: ${message}`);
         }
+
+        userForm.reset();
 
     } catch (error) {
         console.log(error);

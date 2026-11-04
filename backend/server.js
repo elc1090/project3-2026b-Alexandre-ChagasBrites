@@ -66,6 +66,26 @@ app.get('/api/me', requireAuth, async (req, res) => {
     res.json(user);
 });
 
+app.patch('/api/me', requireAuth, async (req, res) => {
+    const set = { ...req.body };
+    for (const key of Object.keys(set)) {
+        if (set[key] === undefined || set[key] === null || set[key] === "") {
+            delete set[key];
+        }
+    }
+    if ("password" in set) {
+        set.passwordHash = bcrypt.hashSync(set.password, 10);
+        delete set["password"];
+    }
+    await users.updateOne({ _id: req.session.user.username }, { $set: set });
+    res.status(204).end();
+});
+
+app.delete('/api/me', requireAuth, async (req, res) => {
+    await users.deleteOne({ _id: req.session.user.username });
+    req.session.destroy(() => res.status(204).end());
+});
+
 app.get('/api/users', requireAuth, requireRole("admin"), async (_req, res) => {
     const result = await users.find({}, { username: true, role: true }).toArray();
     res.json(result);
