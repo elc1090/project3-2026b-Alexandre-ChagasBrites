@@ -144,13 +144,13 @@ async function loadAsset(type, path) {
 }
 
 async function loadResources() {
-    loadAsset("Prefab", "assets/Prefabs/Particles/Dust1.json");
-    loadAsset("Prefab", "assets/Prefabs/Particles/Dust2.json");
-    game.buildings["Castle"] = await loadAsset("Prefab", "assets/Prefabs/Buildings/Castle.json");
-    game.buildings["Barracks"] = await loadAsset("Prefab", "assets/Prefabs/Buildings/Barracks.json");
-    game.buildings["Archery"] = await loadAsset("Prefab", "assets/Prefabs/Buildings/Archery.json");
-    game.buildings["House"] = await loadAsset("Prefab", "assets/Prefabs/Buildings/House.json");
-    game.cursor.targetTexture = await loadAsset("Image", "assets/Images/UI Elements/Cursors/Cursor_04.png");
+    loadAsset("Prefab", "/assets/Prefabs/Particles/Dust1.json");
+    loadAsset("Prefab", "/assets/Prefabs/Particles/Dust2.json");
+    game.buildings["Castle"] = await loadAsset("Prefab", "/assets/Prefabs/Buildings/Castle.json");
+    game.buildings["Barracks"] = await loadAsset("Prefab", "/assets/Prefabs/Buildings/Barracks.json");
+    game.buildings["Archery"] = await loadAsset("Prefab", "/assets/Prefabs/Buildings/Archery.json");
+    game.buildings["House"] = await loadAsset("Prefab", "/assets/Prefabs/Buildings/House.json");
+    game.cursor.targetTexture = await loadAsset("Image", "/assets/Images/UI Elements/Cursors/Cursor_04.png");
     updateResources({});
 }
 
@@ -437,14 +437,14 @@ function onStep(deltatime) {
                 const time = (8 + Math.sqrt(8 * 8 + 2 * 10 * (object.z - object.targetObject.z))) / 10.0;
                 const velocityX = (object.targetObject.x - object.x) / time;
                 const velocityY = (object.targetObject.y - object.y) / time;
-                loadPrefab({ x: object.x, y: object.y, z: object.z + 0.5, velocityX: velocityX, velocityY: velocityY, velocityZ: 8 }, "assets/Prefabs/Units/Arrow.json");
+                loadPrefab({ x: object.x, y: object.y, z: object.z + 0.5, velocityX: velocityX, velocityY: velocityY, velocityZ: 8 }, "/assets/Prefabs/Units/Arrow.json");
             } else if (object.x === object.targetX && object.y === object.targetY) {
                 if (object.targetObject.prefab.type === "Building") {
                     object.targetObject.health++;
                     if (object.targetObject.health < object.targetObject.prefab.health) {
                         object.actionTimer += object.prefab.animations[object.animation].frameCount * 0.1;
                     } else {
-                        loadPrefab({ x: object.targetObject.x, y: object.targetObject.y, z: object.targetObject.z }, "assets/Prefabs/Particles/Dust2.json");
+                        loadPrefab({ x: object.targetObject.x, y: object.targetObject.y, z: object.targetObject.z }, "/assets/Prefabs/Particles/Dust2.json");
                         object.targetObject = null;
                     }
                 } else {
@@ -460,7 +460,7 @@ function onStep(deltatime) {
                         } else if (object.targetObject.prefab.type === "Unit") {
                             object.targetObject.alive = false;
                         }
-                        loadPrefab({ x: object.targetObject.x, y: object.targetObject.y, z: object.targetObject.z }, "assets/Prefabs/Particles/Dust1.json");
+                        loadPrefab({ x: object.targetObject.x, y: object.targetObject.y, z: object.targetObject.z }, "/assets/Prefabs/Particles/Dust1.json");
                         object.targetObject = null;
                     }
                 }
@@ -638,11 +638,11 @@ function onEvent(e) {
                     setObjectAnimation(game.activeObject, "Run");
                 } else if (game.activeObject.prefab.unitType === "Pawn") {
                     if (game.activeObject.targetObject.prefab.resourceType === "Tree") {
-                        setObjectPrefab(game.activeObject, "assets/Prefabs/Units/Pawn Axe.json");
+                        setObjectPrefab(game.activeObject, "/assets/Prefabs/Units/Pawn Axe.json");
                     } else if (game.activeObject.targetObject.prefab.resourceType === "Sheep") {
-                        setObjectPrefab(game.activeObject, "assets/Prefabs/Units/Pawn Knife.json");
+                        setObjectPrefab(game.activeObject, "/assets/Prefabs/Units/Pawn Knife.json");
                     } else if (game.activeObject.targetObject.prefab.type === "Building") {
-                        setObjectPrefab(game.activeObject, "assets/Prefabs/Units/Pawn Hammer.json");
+                        setObjectPrefab(game.activeObject, "/assets/Prefabs/Units/Pawn Hammer.json");
                     }
                 }
             }
@@ -877,7 +877,7 @@ for (const buildingButton of buildingSection.children) {
     buildingButton.children[0].style.backgroundImage = buildingButton.children[0].style.backgroundImage.replace("Blue", game.teamColor);
     buildingButton.addEventListener("click", () => {
         if (canAfford(game.buildings[buildingButton.dataset.building].buildingCost)) {
-            loadBuilding(`assets/Prefabs/Buildings/${buildingButton.dataset.building}.json`);
+            loadBuilding(`/assets/Prefabs/Buildings/${buildingButton.dataset.building}.json`);
         }
     });
 }
@@ -947,9 +947,9 @@ async function generateTilemap(sizeX, sizeY) {
         sizeX: sizeX,
         sizeY: sizeY,
         tilesets: [ 
-            await loadAsset("Image", "assets/Images/Terrain/Tileset/Tilemap_color1.png"),
-            await loadAsset("Image", "assets/Images/Terrain/Tileset/Tilemap_color2.png"),
-            await loadAsset("Image", "assets/Images/Terrain/Tileset/Tilemap_color3.png")
+            await loadAsset("Image", "/assets/Images/Terrain/Tileset/Tilemap_color1.png"),
+            await loadAsset("Image", "/assets/Images/Terrain/Tileset/Tilemap_color2.png"),
+            await loadAsset("Image", "/assets/Images/Terrain/Tileset/Tilemap_color3.png")
         ],
         tiles: generateLayer(sizeX, sizeY, 3, 4, 4, (x, y) => {
             return 1.0 - (Math.abs(x - sizeX * 0.5) / sizeX + Math.abs(y - sizeY * 0.5) / sizeY);
@@ -981,7 +981,7 @@ async function generateTilemap(sizeX, sizeY) {
     for (let y = 0; y < sizeY; y++) {
         for (let x = 0; x < sizeX; x++) {
             if (tilemap.tiles[x + y * sizeX] > 0 && treeLayer[x + y * sizeX] == 1) {
-                const treePath = `assets/Prefabs/Terrain/Resources/Wood/Trees/Tree${Math.floor(Math.random() * 4 + 1)}.json`;
+                const treePath = `/assets/Prefabs/Terrain/Resources/Wood/Trees/Tree${Math.floor(Math.random() * 4 + 1)}.json`;
                 await loadPrefab({ x: x + 0.5 + (Math.random() - 0.5) * 0.5, y: y + 0.5 + (Math.random() - 0.5) * 0.5, z: getTilemapHeight(x, y) }, treePath);
             }
         }
@@ -992,18 +992,18 @@ async function loadLevel() {
     await loadResources();
     await generateTilemap(48, 24);
 
-    //await loadPrefab({ x: 4.5, y: 3, z: 2 }, "assets/Prefabs/Buildings/Castle.json");
+    //await loadPrefab({ x: 4.5, y: 3, z: 2 }, "/assets/Prefabs/Buildings/Castle.json");
     for (let i = 0; i < 3; i++) {
-        await loadPrefab(getRandomPosition(), "assets/Prefabs/Units/Pawn.json");
+        await loadPrefab(getRandomPosition(), "/assets/Prefabs/Units/Pawn.json");
     }
     /*for (let i = 0; i < 5; i++) {
-        await loadPrefab(getRandomPosition(), "assets/Prefabs/Units/Warrior.json");
+        await loadPrefab(getRandomPosition(), "/assets/Prefabs/Units/Warrior.json");
     }
     for (let i = 0; i < 5; i++) {
-        await loadPrefab(getRandomPosition(), "assets/Prefabs/Units/Archer.json");
+        await loadPrefab(getRandomPosition(), "/assets/Prefabs/Units/Archer.json");
     }*/
     for (let i = 0; i < 10; i++) {
-        await loadPrefab(getRandomPosition(), "assets/Prefabs/Terrain/Resources/Meat/Sheep.json");
+        await loadPrefab(getRandomPosition(), "/assets/Prefabs/Terrain/Resources/Meat/Sheep.json");
     }
 }
 

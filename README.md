@@ -1,18 +1,10 @@
 # Projeto: Aplicação com cadastro e autenticação de usuários integrando frontend, backend e persistência
 
-> 1. Leia com atenção as instruções abaixo para editar este README em formato Markdown.
-> 2. Substitua todos os trechos de texto iniciados com "Substitua" por informações do seu projeto, conforme solicitado em cada trecho.
-> 3. Substitua a imagem animada por um GIF/WEBP mostrando o resultado do seu projeto (o arquivo pode ser armazenado no repositório ou em URL externa). 
-> 4. Remova todas as instruções de entrega.
-> 5. Renomeie esta arquivo para README.md e entregue-o dentro da pasta raiz do seu repositório de entrega. 
-> 6. Double-check: Certifique-se de que seu README.md não contenha instruções de entrega e seja visualizado corretamente ao abrir seu repositório!
-> Opcional: você pode alterar a formatação deste README, mas mantenha todas as informações solicitadas.
-
 ![Substitua a imagem ao lado por um GIF/WEBP animado mostrando seu projeto](./moho_follow_through2.gif "GIF animado do projeto. Imagem temporária de Moho Animation https://moho.lostmarble.com/products/moho-pro-special-halls-head-college")
 
 ## Acesso
 
-Substitua este texto pela URL para acesso ao seu app publicado. Adicione a URL também na seção "About" do seu repositório no GitHub.
+- https://project3-2026b-alexandre-chagas-bri.vercel.app/
 
 ## Desenvolvedor(a) / Desenvolvedor(es/as)
 
@@ -20,7 +12,7 @@ Alexandre Chagas Brites - Ciência da Computação
 
 ## Proposta
 
-Desenvolvimento de jogo real-time strategy (RTS) com multiplayer assíncrono. O jogador se cadastra, monta uma fortaleza para ser defendida, e então seleciona a fortaleza de outros jogadores para desafiar e ganhar pontos. O jogador também pode reproduzir partidas anteriores que ele jogou e que outros jogadores desafiaram sua fortaleza. Tecnologias: Next.js, React, Express.js, MongoDB
+Desenvolvimento de jogo real-time strategy (RTS) com multiplayer assíncrono. O jogador se cadastra, monta uma fortaleza para ser defendida, e então seleciona a fortaleza de outros jogadores para desafiar e ganhar pontos. O jogador também pode reproduzir partidas anteriores que ele jogou e que outros jogadores desafiaram sua fortaleza.
 
 ## Desenvolvimento
 

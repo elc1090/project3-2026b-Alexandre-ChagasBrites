@@ -15,13 +15,13 @@
         "Idle": {
             "offsetX": 96,
             "offsetY": 226,
-            "texture": "assets/Images/Terrain/Resources/Wood/Trees/Tree1.png",
+            "texture": "/assets/Images/Terrain/Resources/Wood/Trees/Tree1.png",
             "frameCount": 8
         },
         "Stump": {
             "offsetX": 96,
             "offsetY": 226,
-            "texture": "assets/Images/Terrain/Resources/Wood/Trees/Stump 1.png",
+            "texture": "/assets/Images/Terrain/Resources/Wood/Trees/Stump 1.png",
             "frameCount": 1
         }
     }

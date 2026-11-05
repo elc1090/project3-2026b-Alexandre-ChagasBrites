@@ -15,7 +15,7 @@
         "Idle": {
             "offsetX": 96,
             "offsetY": 192,
-            "texture": "assets/Images/Buildings/${Color} Buildings/Barracks.png",
+            "texture": "/assets/Images/Buildings/${Color} Buildings/Barracks.png",
             "frameCount": 1
         }
     }

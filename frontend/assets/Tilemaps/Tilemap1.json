@@ -2,9 +2,9 @@
     "sizeX": 23,
     "sizeY": 15,
     "tilesets": [
-        "assets/Images/Terrain/Tileset/Tilemap_color1.png",
-        "assets/Images/Terrain/Tileset/Tilemap_color2.png",
-        "assets/Images/Terrain/Tileset/Tilemap_color3.png"
+        "/assets/Images/Terrain/Tileset/Tilemap_color1.png",
+        "/assets/Images/Terrain/Tileset/Tilemap_color2.png",
+        "/assets/Images/Terrain/Tileset/Tilemap_color3.png"
     ],
     "tiles":  [
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0,
