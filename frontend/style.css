@@ -1,6 +1,6 @@
 @font-face {
     font-family: "PatrickHand";
-    src: url("/assets/PatrickHand-Regular.ttf")
+    src: url("/PatrickHand-Regular.ttf")
 }
 
 * {
@@ -9,7 +9,7 @@
     box-sizing: content-box;
     font-family: "PatrickHand";
     font-size: 32px;
-    cursor: url("/assets/Images/UI Elements/Cursors/Cursor_01.png") 22 17, auto;
+    cursor: url("/Images/UI Elements/Cursors/Cursor_01.png") 22 17, auto;
 }
 
 button {
@@ -19,7 +19,7 @@ button {
 }
 
 button:hover {
-    cursor: url("/assets/Images/UI Elements/Cursors/Cursor_02.png") 22 17, auto;
+    cursor: url("/Images/UI Elements/Cursors/Cursor_02.png") 22 17, auto;
 }
 
 input {
@@ -32,11 +32,11 @@ input:focus-visible {
 }
 
 .cursor-pointer {
-    cursor: url("/assets/Images/UI Elements/Cursors/Cursor_02.png") 22 17, auto;
+    cursor: url("/Images/UI Elements/Cursors/Cursor_02.png") 22 17, auto;
 }
 
 .cursor-not-allowed {
-    cursor: url("/assets/Images/UI Elements/Cursors/Cursor_03.png") 32 32, auto;
+    cursor: url("/Images/UI Elements/Cursors/Cursor_03.png") 32 32, auto;
 }
 
 .highlight:hover:not(.disabled) {
@@ -55,7 +55,7 @@ input:focus-visible {
     border-image-outset: 0;
     border-image-repeat: round;
     border-image-slice: 128 fill;
-    border-image-source: url("/assets/Images/UI Elements/Banners/Banner.png");
+    border-image-source: url("/Images/UI Elements/Banners/Banner.png");
     border-image-width: 128px;
 }
 
@@ -67,7 +67,7 @@ input:focus-visible {
     border-image-outset: 0;
     border-image-repeat: round;
     border-image-slice: 64 fill;
-    border-image-source: url("/assets/Images/UI Elements/Banners/Banner_Slots.png");
+    border-image-source: url("/Images/UI Elements/Banners/Banner_Slots.png");
     border-image-width: 64px;
 }
 
@@ -80,12 +80,12 @@ input:focus-visible {
     border-image-outset: 0;
     border-image-repeat: round;
     border-image-slice: 64 fill;
-    border-image-source: url("/assets/Images/UI Elements/Buttons/BigBlueButton_Regular.png");
+    border-image-source: url("/Images/UI Elements/Buttons/BigBlueButton_Regular.png");
     border-image-width: 64px;
 }
 
 .button-big:active {
-    border-image-source: url("/assets/Images/UI Elements/Buttons/BigBlueButton_Pressed.png");
+    border-image-source: url("/Images/UI Elements/Buttons/BigBlueButton_Pressed.png");
 }
 
 .ribbon-big {
@@ -96,7 +96,7 @@ input:focus-visible {
     border-image-outset: 0;
     border-image-repeat: round;
     border-image-slice: 64 128 fill;
-    border-image-source: url("/assets/Images/UI Elements/Ribbons/BigRibbon_Blue.png");
+    border-image-source: url("/Images/UI Elements/Ribbons/BigRibbon_Blue.png");
     border-image-width: 64px 128px;
 }
 
@@ -107,7 +107,7 @@ input:focus-visible {
     border-image-outset: 0;
     border-image-repeat: round;
     border-image-slice: 128 fill;
-    border-image-source: url("/assets/Images/UI Elements/Wood Table/WoodTable.png");
+    border-image-source: url("/Images/UI Elements/Wood Table/WoodTable.png");
     border-image-width: 64px;
 }
 
@@ -115,6 +115,6 @@ input:focus-visible {
     border-image-outset: 0;
     border-image-repeat: round;
     border-image-slice: 64 fill;
-    border-image-source: url("/assets/Images/UI Elements/Wood Table/WoodTable_Slots.png");
+    border-image-source: url("/Images/UI Elements/Wood Table/WoodTable_Slots.png");
     border-image-width: 32px;
 }

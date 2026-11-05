@@ -15,7 +15,7 @@
         "Idle": {
             "offsetX": 160,
             "offsetY": 192,
-            "texture": "/assets/Images/Buildings/${Color} Buildings/Castle.png",
+            "texture": "/Images/Buildings/${Color} Buildings/Castle.png",
             "frameCount": 1
         }
     }

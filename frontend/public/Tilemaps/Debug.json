@@ -2,7 +2,7 @@
     "sizeX": 5,
     "sizeY": 5,
     "tilesets": [
-        "/assets/Images/Terrain/Tileset/Tilemap_color1.png"
+        "/Images/Terrain/Tileset/Tilemap_color1.png"
     ],
     "tiles":  [
         1, 1, 1, 0, 1,

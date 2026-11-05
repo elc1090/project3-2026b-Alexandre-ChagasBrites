@@ -2,7 +2,7 @@
     "type": "Resource",
     "resourceType": "Tree",
     "resourceGain": {
-        "wood": 5
+        "wood": 10
     },
     "health": 4,
     "sizeX": 64,
@@ -14,14 +14,14 @@
     "animations": {
         "Idle": {
             "offsetX": 96,
-            "offsetY": 161,
-            "texture": "/assets/Images/Terrain/Resources/Wood/Trees/Tree3.png",
+            "offsetY": 226,
+            "texture": "/Images/Terrain/Resources/Wood/Trees/Tree1.png",
             "frameCount": 8
         },
         "Stump": {
             "offsetX": 96,
-            "offsetY": 225,
-            "texture": "/assets/Images/Terrain/Resources/Wood/Trees/Stump 3.png",
+            "offsetY": 226,
+            "texture": "/Images/Terrain/Resources/Wood/Trees/Stump 1.png",
             "frameCount": 1
         }
     }

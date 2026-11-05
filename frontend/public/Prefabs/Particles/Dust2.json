@@ -4,7 +4,7 @@
         "Idle": {
             "offsetX": 32,
             "offsetY": 32,
-            "texture": "/assets/Images/Particle FX/Dust_02.png",
+            "texture": "/Images/Particle FX/Dust_02.png",
             "frameCount": 10
         }
     }

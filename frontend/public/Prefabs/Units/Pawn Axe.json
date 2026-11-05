@@ -8,26 +8,26 @@
     "selectionY": -80,
     "selectionW": 64,
     "selectionH": 96,
-    "avatar": "/assets/Images/UI Elements/Human Avatars/${Color}/Avatars_Pawn.png",
+    "avatar": "/Images/UI Elements/Human Avatars/${Color}/Avatars_Pawn.png",
     "animations": {
         "Idle": {
             "offsetX": 96,
             "offsetY": 127,
-            "texture": "/assets/Images/Units/${Color} Units/Pawn/Pawn_Idle Hammer.png",
+            "texture": "/Images/Units/${Color} Units/Pawn/Pawn_Idle Axe.png",
             "frameCount": 8
         },
         "Run": {
             "offsetX": 96,
             "offsetY": 127,
-            "texture": "/assets/Images/Units/${Color} Units/Pawn/Pawn_Run Hammer.png",
+            "texture": "/Images/Units/${Color} Units/Pawn/Pawn_Run Axe.png",
             "frameCount": 6
         },
         "Interact": {
             "offsetX": 96,
             "offsetY": 127,
-            "texture": "/assets/Images/Units/${Color} Units/Pawn/Pawn_Interact Hammer.png",
-            "frameCount": 3,
-            "actionFrame": 2
+            "texture": "/Images/Units/${Color} Units/Pawn/Pawn_Interact Axe.png",
+            "frameCount": 6,
+            "actionFrame": 3
         }
     }
 }

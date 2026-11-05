@@ -4,7 +4,7 @@ import bcrypt from "bcryptjs";
 import cors from "cors";
 import { MongoClient, ObjectId } from "mongodb";
 
-const client = new MongoClient(process.env.MONGODB_URL || "mongodb+srv://acbrites_db_user:LLsoJSue1qbrjid7@tiny-swords.7fozaib.mongodb.net/");
+const client = new MongoClient(process.env.MONGODB_URL);
 await client.connect();
 
 const db = client.db("backend");
@@ -21,13 +21,7 @@ if ((await users.countDocuments()) === 0) {
 
 const app = express();
 app.use(cors({
-    origin: (origin, callback) => {
-        console.log(`origin: ${origin}`);
-        callback(null, {
-            origin,
-            credentials: true
-        });
-    },
+    origin: "https://project3-2026b-alexandre-chagas-bri.vercel.app/",
     credentials: true
 }));
 app.use(express.json());
