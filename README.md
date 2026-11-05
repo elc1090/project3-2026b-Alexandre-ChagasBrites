@@ -38,16 +38,19 @@ Substitua este texto por uma indicação de pelo menos 3 trechos de código que 
 
 ## Tecnologias
 
-- Docker
+- Vite
 - Express.js
 - MongoDB
+- Vercel
 
 ### Linguagens e afins
 
 Substitua este texto por uma lista detalhada de tecnologias utilizadas:
-- ...
-- ...
-- 
+- JavaScript
+- Vite
+- Express.js
+- MongoDB
+- Vercel
 
 ### Autenticação e autorização
 
@@ -64,8 +67,8 @@ Substitua este trecho por uma lista detalhada dos ambientes/ferramentas de desen
 Substitua este trecho por uma lista bem detalhada de todo material consultado para ajudar no projeto, por exemplo:  URLs de vídeos ou outro material consultado, créditos para colegas que colaboraram, geradores de código, etc.
 - https://pixelfrog-assets.itch.io/tiny-swords
 - Procedural Game Map Generation using Multi-leveledCellularAutomata by Machine learning
+- https://vite.dev/guide/
 - https://expressjs.com/pt-br/5x/starter/hello-world/
-- https://docs.docker.com/reference/samples/express/
 
 ---
 Projeto entregue para a disciplina de [Desenvolvimento de Software para a Web](http://github.com/andreainfufsm/elc1090-2026b) em 2026b
