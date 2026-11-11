@@ -4,7 +4,7 @@
 
 ## Acesso
 
-- https://project3-2026b-alexandre-chagas-bri.vercel.app/
+- https://project3-2026b-alexandre-chagasbrites.vercel.app/
 
 ## Desenvolvedor(a) / Desenvolvedor(es/as)
 

@@ -29,7 +29,7 @@ async function getUserForm() {
     userForm.reset();
 
     try {
-        const response = await fetch("https://project3-2026b-alexandre-chagas-bri-one.vercel.app/api/me", { credentials: "include" });
+        const response = await fetch("https://project3-2026b-alexandre-chagasbrites.vercel.app/api/me", { credentials: "include" });
         if (!response.ok) {
             const message = await response.text();
             throw new Error(`${response.status}: ${message}`);
@@ -54,7 +54,7 @@ signinForm.addEventListener("submit", async (e) => {
     e.preventDefault();
 
     try {
-        const response = await fetch("https://project3-2026b-alexandre-chagas-bri-one.vercel.app/api/signin", {
+        const response = await fetch("https://project3-2026b-alexandre-chagasbrites.vercel.app/api/signin", {
             method: "POST",
             headers: { 
                 "Content-Type": "application/json"
@@ -85,7 +85,7 @@ signupForm.addEventListener("submit", async (e) => {
     e.preventDefault();
 
     try {
-        const response = await fetch("https://project3-2026b-alexandre-chagas-bri-one.vercel.app/api/signup", {
+        const response = await fetch("https://project3-2026b-alexandre-chagasbrites.vercel.app/api/signup", {
             method: "POST",
             headers: { 
                 "Content-Type": "application/json"
@@ -118,7 +118,7 @@ userForm.addEventListener("submit", async (e) => {
     e.preventDefault();
 
     try {
-        const response = await fetch("https://project3-2026b-alexandre-chagas-bri-one.vercel.app/api/me", {
+        const response = await fetch("https://project3-2026b-alexandre-chagasbrites.vercel.app/api/me", {
             method: "PATCH",
             headers: { 
                 "Content-Type": "application/json"
@@ -143,7 +143,7 @@ userForm.addEventListener("submit", async (e) => {
 
 deleteButton.addEventListener("click", async (e) => {
     try {
-        const response = await fetch("https://project3-2026b-alexandre-chagas-bri-one.vercel.app/api/me", {
+        const response = await fetch("https://project3-2026b-alexandre-chagasbrites.vercel.app/api/me", {
             method: "DELETE",
             credentials: "include"
         });
@@ -160,7 +160,7 @@ deleteButton.addEventListener("click", async (e) => {
 
 signoffButton.addEventListener("click", async (e) => {
     try {
-        const response = await fetch("https://project3-2026b-alexandre-chagas-bri-one.vercel.app/api/signoff", {
+        const response = await fetch("https://project3-2026b-alexandre-chagasbrites.vercel.app/api/signoff", {
             method: "POST",
             credentials: "include"
         });

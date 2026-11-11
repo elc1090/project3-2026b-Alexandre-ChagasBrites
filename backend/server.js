@@ -21,7 +21,7 @@ if ((await users.countDocuments()) === 0) {
 
 const app = express();
 app.use(cors({
-    origin: "https://project3-2026b-alexandre-chagas-bri.vercel.app/",
+    origin: "https://project3-2026b-alexandre-chagasbrites.vercel.app/",
     credentials: true
 }));
 app.use(express.json());
