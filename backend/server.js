@@ -4,7 +4,11 @@ import bcrypt from "bcryptjs";
 import cors from "cors";
 import { MongoClient, ObjectId } from "mongodb";
 
-const client = new MongoClient(process.env.MONGODB_URL);
+const options = {
+  appName: "devrel.vercel.integration",
+  maxIdleTimeMS: 5000
+};
+const client = new MongoClient(process.env.MONGODB_URI, options);
 await client.connect();
 
 const db = client.db("backend");
